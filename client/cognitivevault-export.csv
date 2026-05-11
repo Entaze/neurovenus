@@ -1,0 +1,10 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Error</title>
+</head>
+<body>
+<pre>Cannot GET /api/studies/69fe9caf0b12f409b72c26a4/export/csv</pre>
+</body>
+</html>
