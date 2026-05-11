@@ -10,7 +10,7 @@ mongoose.connect(process.env.MONGO_URI);
 async function createUser() {
   try {
     const existingUser = await User.findOne({
-      email: "researcher@cognimeo.com",
+      email: "researcher@neurovenus.com",
     });
 
     if (existingUser) {
@@ -22,10 +22,10 @@ async function createUser() {
 
     const user = await User.create({
       name: "Research Admin",
-      email: "researcher@cognimeo.com",
+      email: "researcher@neurovenus.com",
       passwordHash,
       role: "admin",
-      institution: "CognitiveVault",
+      institution: "Neurovenus",
     });
 
     console.log("Researcher created:");

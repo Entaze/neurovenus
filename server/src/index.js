@@ -28,9 +28,9 @@ const app = express();
 const allowedOrigins = [
   "http://localhost:5173",
   "https://cognitivevault-app.onrender.com",
-  "https://admin.cognimeo.com",
-  "https://participant.cognimeo.com",
-  "https://app.cognimeo.com",
+  "https://admin.neurovenus.com",
+  "https://participant.neurovenus.com",
+  "https://app.neurovenus.com",
 ];
 
 /**
@@ -73,7 +73,7 @@ app.use("/api/auth", authRoutes);
  */
 app.get("/", (req, res) => {
   res.json({
-    message: "CognitiveVault API is running",
+    message: "Neurovenus API is running",
     status: "ok",
     timestamp: new Date().toISOString(),
   });
@@ -112,7 +112,7 @@ app.use((err, req, res, next) => {
 const PORT = process.env.PORT || 4000;
 
 app.listen(PORT, () => {
-  console.log(`CognitiveVault API running on port ${PORT}`);
+  console.log(`Neurovenus API running on port ${PORT}`);
   console.log("Allowed origins:", allowedOrigins.join(", "));
   startReminderScheduler();
 });

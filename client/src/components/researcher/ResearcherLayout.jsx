@@ -23,7 +23,7 @@ export default function ResearcherLayout({ children }) {
     <div style={styles.wrapper}>
       <aside style={styles.sidebar}>
         <div>
-          <h2 style={styles.logo}>CognitiveVault</h2>
+          <h2 style={styles.logo}>Neurovenus</h2>
           <p style={styles.subtitle}>Researcher Portal</p>
         </div>
 

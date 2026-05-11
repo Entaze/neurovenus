@@ -17,7 +17,7 @@ const sendEmail = async ({ to, subject, html, text }) => {
   }
 
   const { data, error } = await resend.emails.send({
-    from: process.env.EMAIL_FROM || "CognitiveVault <onboarding@resend.dev>",
+    from: process.env.EMAIL_FROM || "Neurovenus <onboarding@resend.dev>",
     to,
     subject,
     html,
@@ -81,7 +81,7 @@ const sendSessionReminderEmail = async ({
 
   return sendEmail({
     to,
-    subject: `Your next CognitiveVault session is available`,
+    subject: `Your next Neurovenus session is available`,
     text: `Your next session for ${studyTitle} is now available.
 
 Participant ID: ${participantCode}

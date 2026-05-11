@@ -5,7 +5,7 @@ export default function AppShell({ children }) {
         <header className="mb-10 flex items-center justify-between">
           <div>
             <p className="text-xs uppercase tracking-[0.35em] text-cyan-300/70">
-              CognitiveVault
+              Neurovenus
             </p>
             <h1 className="mt-2 text-2xl font-semibold tracking-tight">
               Research Session Portal
