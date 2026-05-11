@@ -10,7 +10,6 @@ let isChecking = false;
 
 const runReminderCheck = async () => {
   if (isChecking) {
-    console.log("Reminder check already running. Skipping this cycle.");
     return;
   }
 
@@ -18,8 +17,6 @@ const runReminderCheck = async () => {
 
   try {
     const now = new Date();
-
-    console.log("Running reminder check at:", now.toISOString());
 
     const sessions = await SessionRun.find({
       opensAt: { $lte: now },
@@ -32,15 +29,14 @@ const runReminderCheck = async () => {
       .sort({ opensAt: 1 })
       .limit(50);
 
-    console.log(`Reminder candidates found: ${sessions.length}`);
-
     for (const session of sessions) {
-      const reminderEligibleStatuses = ["available", "locked", "in_progress"];
+      const reminderEligibleStatuses = [
+        "available",
+        "locked",
+        "in_progress",
+      ];
 
       if (!reminderEligibleStatuses.includes(session.status)) {
-        console.log(
-          `Skipping ${session.sessionName}: status is "${session.status}", not reminder eligible.`
-        );
         continue;
       }
 
@@ -48,26 +44,18 @@ const runReminderCheck = async () => {
       const study = await Study.findById(session.studyId);
 
       if (!participant) {
-        console.log(`Skipping ${session.sessionName}: participant not found.`);
         continue;
       }
 
       if (!study) {
-        console.log(`Skipping ${session.sessionName}: study not found.`);
         continue;
       }
 
       if (!participant.email) {
-        console.log(
-          `Skipping ${session.sessionName}: participant has no email.`
-        );
         continue;
       }
 
       if (!participant.accessLink) {
-        console.log(
-          `Skipping ${participant.email}: participant has no access link.`
-        );
         continue;
       }
 
@@ -82,18 +70,11 @@ const runReminderCheck = async () => {
       });
 
       if (!emailResult) {
-        console.log(
-          `Reminder email failed or returned no result for ${participant.email} / ${session.sessionName}.`
-        );
         continue;
       }
 
       session.reminderSentAt = new Date();
       await session.save();
-
-      console.log(
-        `Session reminder sent to ${participant.email} for ${session.sessionName}.`
-      );
     }
   } catch (error) {
     console.error("Reminder scheduler failed:", error);
@@ -104,11 +85,8 @@ const runReminderCheck = async () => {
 
 const startReminderScheduler = () => {
   if (reminderInterval) {
-    console.log("Reminder scheduler already started.");
     return;
   }
-
-  console.log("Reminder scheduler started.");
 
   runReminderCheck();
 

@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { Mail, Lock, Eye, EyeOff, ShieldCheck, Users, Activity, Download } from "lucide-react";
 
 import api from "../../api/client";
 import { useResearcherAuth } from "../../hooks/useResearcherAuth";
@@ -10,8 +11,8 @@ export default function ResearcherLogin() {
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  // const [email, setEmail] = useState("researcher@cognimeo.com");
-  // const [password, setPassword] = useState("password123");
+  const [showPassword, setShowPassword] = useState(false);
+  const [rememberMe, setRememberMe] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
 
@@ -47,51 +48,129 @@ export default function ResearcherLogin() {
 
   return (
     <main style={styles.page}>
+      <div style={styles.glowOne} />
+      <div style={styles.glowTwo} />
+      <div style={styles.gridOverlay} />
+
       <section style={styles.shell}>
         <div style={styles.hero}>
-          <p style={styles.brand}>COGNIMEO</p>
+          <div style={styles.logoRow}>
+            <img
+              src="/neurovenus-icon.svg"
+              alt="Neurovenus icon"
+              style={styles.logoIcon}
+            />
+
+            <span style={styles.logoText}>NEUROVENUS</span>
+          </div>
+
+          <div style={styles.badge}>Researcher Portal</div>
 
           <h1 style={styles.heroTitle}>
-            Research-grade cognitive testing, delivered remotely.
+            Research-grade cognitive testing,{" "}
+            <span style={styles.gradientText}>delivered remotely.</span>
           </h1>
 
           <p style={styles.heroText}>
-            Manage studies, invite participants, monitor sessions, and export
-            clean research data from one secure dashboard.
+            Build and run remote cognitive and sleep studies. Invite participants,
+            monitor sessions, collect high-quality data, and export analysis-ready
+            datasets from one secure platform.
           </p>
+
+          <div style={styles.featuresGrid}>
+            <Feature
+              icon={<ShieldCheck size={26} />}
+              title="Secure by design"
+              text="Protected researcher access and secure participant links."
+            />
+            <Feature
+              icon={<Users size={26} />}
+              title="Flexible studies"
+              text="Configure sessions, assessments, schedules, and reminders."
+            />
+            <Feature
+              icon={<Activity size={26} />}
+              title="Progress tracking"
+              text="Monitor participant completion and session activity."
+            />
+            <Feature
+              icon={<Download size={26} />}
+              title="Clean exports"
+              text="Export structured datasets for downstream analysis."
+            />
+          </div>
         </div>
 
         <form onSubmit={handleSubmit} style={styles.card}>
           <p style={styles.kicker}>Researcher Portal</p>
-          <h2 style={styles.title}>Sign in</h2>
+          <h2 style={styles.title}>Welcome back</h2>
+          <p style={styles.subtitle}>Sign in to your Neurovenus account.</p>
 
           <label style={styles.field}>
             <span style={styles.label}>Email</span>
-            <input
-              type="email"
-              value={email}
-              placeholder="Enter email"
-              onChange={(e) => setEmail(e.target.value)}
-              style={styles.input}
-              disabled={submitting}
-              autoComplete="email"
-            />
+            <div style={styles.inputWrap}>
+              <Mail size={18} style={styles.inputIcon} />
+              <input
+                type="email"
+                value={email}
+                placeholder="Enter your email"
+                onChange={(e) => setEmail(e.target.value)}
+                style={styles.input}
+                disabled={submitting}
+                autoComplete="email"
+              />
+            </div>
           </label>
 
           <label style={styles.field}>
             <span style={styles.label}>Password</span>
-            <input
-              type="password"
-              value={password}
-              placeholder="Enter password"
-              onChange={(e) => setPassword(e.target.value)}
-              style={styles.input}
-              disabled={submitting}
-              autoComplete="current-password"
-            />
+            <div style={styles.inputWrap}>
+              <Lock size={18} style={styles.inputIcon} />
+              <input
+                type={showPassword ? "text" : "password"}
+                value={password}
+                placeholder="Enter your password"
+                onChange={(e) => setPassword(e.target.value)}
+                style={styles.input}
+                disabled={submitting}
+                autoComplete="current-password"
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword((value) => !value)}
+                style={styles.eyeButton}
+                disabled={submitting}
+                aria-label={showPassword ? "Hide password" : "Show password"}
+              >
+                {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+              </button>
+            </div>
           </label>
 
-          {error && <p style={styles.error}>{error}</p>}
+          <div style={styles.optionsRow}>
+            <label style={styles.rememberRow}>
+              <input
+                type="checkbox"
+                checked={rememberMe}
+                onChange={(e) => setRememberMe(e.target.checked)}
+                style={styles.checkbox}
+              />
+              Remember me
+            </label>
+
+            <button type="button" style={styles.linkButton}>
+              Forgot password?
+            </button>
+          </div>
+
+          <p
+            style={{
+              ...styles.error,
+              visibility: error ? "visible" : "hidden",
+            }}
+          >
+            {error || "Placeholder"}
+          </p>
 
           <button
             type="submit"
@@ -101,141 +180,407 @@ export default function ResearcherLogin() {
               ...(submitting ? styles.buttonDisabled : {}),
             }}
           >
-            {submitting ? "Signing in..." : "Sign In"}
+            {submitting ? "Signing in..." : "Sign in"}
           </button>
+
+          <div style={styles.divider}>
+            <span style={styles.dividerLine} />
+            <span style={styles.dividerText}>or</span>
+            <span style={styles.dividerLine} />
+          </div>
+
+          <button type="button" style={styles.secondaryButton}>
+            Sign in with SSO
+          </button>
+
+          <p style={styles.helpText}>
+            Need access?{" "}
+            <span style={styles.helpLink}>Contact your study administrator.</span>
+          </p>
         </form>
       </section>
+
+      <footer style={styles.footer}>
+        <span>© 2026 Neurovenus. All rights reserved.</span>
+        <span>Privacy Policy</span>
+        <span>Terms of Service</span>
+      </footer>
     </main>
+  );
+}
+
+function Feature({ icon, title, text }) {
+  return (
+    <div style={styles.feature}>
+      <div style={styles.featureIcon}>{icon}</div>
+      <div>
+        <h3 style={styles.featureTitle}>{title}</h3>
+        <p style={styles.featureText}>{text}</p>
+      </div>
+    </div>
   );
 }
 
 const styles = {
   page: {
+    position: "relative",
     minHeight: "100vh",
+    overflow: "hidden",
     display: "flex",
     alignItems: "center",
     justifyContent: "center",
-    padding: "48px",
+    padding: "32px 56px 72px",
     background:
-      "radial-gradient(circle at 12% 25%, rgba(6,182,212,0.18), transparent 28%), radial-gradient(circle at 80% 18%, rgba(37,99,235,0.18), transparent 30%), #080d1a",
+      "linear-gradient(135deg, #020617 0%, #041127 38%, #030b1d 68%, #0b0820 100%)",
     color: "#ffffff",
     boxSizing: "border-box",
+    fontFamily:
+      "Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
+  },
+
+  glowOne: {
+    display: "none",
+  },
+
+  glowTwo: {
+    display: "none",
+  },
+
+  gridOverlay: {
+    position: "absolute",
+    inset: 0,
+    backgroundImage: `
+      linear-gradient(rgba(255,255,255,0.022) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255,255,255,0.022) 1px, transparent 1px)
+    `,
+    backgroundSize: "64px 64px",
+    opacity: 0.42,
+    pointerEvents: "none",
   },
 
   shell: {
+    position: "relative",
+    zIndex: 1,
     width: "100%",
-    maxWidth: 1320,
+    maxWidth: 1280,
     display: "grid",
-    gridTemplateColumns: "minmax(0, 1fr) 420px",
+    gridTemplateColumns: "minmax(0, 700px) 420px",
     alignItems: "center",
-    gap: 96,
+    justifyContent: "center",
+    gap: 110,
+    marginTop: "-56px",
   },
 
   hero: {
-    maxWidth: 720,
+    maxWidth: 700,
   },
 
-  brand: {
-    margin: "0 0 28px",
-    color: "#22d3ee",
-    fontSize: 13,
-    fontWeight: 800,
-    letterSpacing: "0.32em",
+  logoRow: {
+    display: "flex",
+    alignItems: "center",
+    gap: 12,
+    marginBottom: 56,
+  },
+
+  logoIcon: {
+    width: 34,
+    height: 34,
+    display: "block",
+    flexShrink: 0,
+  },
+
+  logoText: {
+    fontSize: 17,
+    fontWeight: 900,
+    letterSpacing: "0.34em",
+    color: "#ffffff",
+  },
+
+  badge: {
+    display: "inline-flex",
+    alignItems: "center",
+    padding: "9px 16px",
+    marginBottom: 28,
+    borderRadius: 999,
+    background: "rgba(15,23,42,0.45)",
+    border: "1px solid rgba(148,163,184,0.18)",
+    color: "#b9d7ff",
+    fontSize: 11,
+    fontWeight: 900,
+    letterSpacing: "0.24em",
+    textTransform: "uppercase",
   },
 
   heroTitle: {
     margin: 0,
     maxWidth: 700,
-    fontSize: "clamp(40px, 5vw, 68px)",
+    fontSize: "clamp(64px, 4.8vw, 76px)",
     lineHeight: 1.02,
-    letterSpacing: "-0.055em",
-    fontWeight: 850,
+    letterSpacing: "-0.065em",
+    fontWeight: 950,
+    color: "#ffffff",
+  },
+
+  gradientText: {
+    display: "inline",
+    background:
+      "linear-gradient(90deg, #38bdf8 0%, #4f8cff 45%, #a855f7 100%)",
+    WebkitBackgroundClip: "text",
+    backgroundClip: "text",
+    WebkitTextFillColor: "transparent",
+    color: "transparent",
   },
 
   heroText: {
     margin: "28px 0 0",
-    maxWidth: 640,
-    color: "#b8c4d6",
+    maxWidth: 620,
+    color: "#d4deeb",
     fontSize: 18,
-    lineHeight: 1.75,
+    lineHeight: 1.9,
+  },
+
+  featuresGrid: {
+    marginTop: 48,
+    display: "grid",
+    gridTemplateColumns: "repeat(2, minmax(0, 1fr))",
+    columnGap: 56,
+    rowGap: 28,
+    maxWidth: 650,
+  },
+
+  feature: {
+    display: "grid",
+    gridTemplateColumns: "34px 1fr",
+    gap: 16,
+    alignItems: "flex-start",
+  },
+
+  featureIcon: {
+    width: 34,
+    height: 34,
+    display: "grid",
+    placeItems: "center",
+    color: "#38bdf8",
+  },
+
+  featureTitle: {
+    margin: "0 0 8px",
+    fontSize: 14,
+    fontWeight: 900,
+    letterSpacing: "0.18em",
+    textTransform: "uppercase",
+    color: "#ffffff",
+  },
+
+  featureText: {
+    margin: 0,
+    color: "#b8c4d6",
+    fontSize: 15,
+    lineHeight: 1.7,
   },
 
   card: {
     width: "100%",
-    padding: 34,
+    padding: "40px 36px",
     borderRadius: 28,
-    background: "rgba(255,255,255,0.06)",
-    border: "1px solid rgba(255,255,255,0.13)",
-    boxShadow: "0 34px 110px rgba(0,0,0,0.44)",
-    backdropFilter: "blur(18px)",
+    background: "rgba(7,13,31,0.74)",
+    border: "1px solid rgba(148,163,184,0.24)",
+    boxShadow:
+      "0 30px 100px rgba(0,0,0,0.45), inset 0 1px 0 rgba(255,255,255,0.05)",
+    backdropFilter: "blur(22px)",
+    WebkitBackdropFilter: "blur(22px)",
     boxSizing: "border-box",
   },
 
   kicker: {
     margin: 0,
-    color: "#22d3ee",
-    fontSize: 12,
-    fontWeight: 800,
-    letterSpacing: "0.16em",
+    color: "#38bdf8",
+    fontSize: 11,
+    fontWeight: 900,
+    letterSpacing: "0.32em",
     textTransform: "uppercase",
   },
 
   title: {
-    margin: "8px 0 30px",
+    margin: "14px 0 8px",
     fontSize: 34,
-    fontWeight: 900,
-    letterSpacing: "-0.04em",
+    fontWeight: 950,
+    letterSpacing: "-0.06em",
+    color: "#ffffff",
+  },
+
+  subtitle: {
+    margin: "0 0 28px",
+    color: "#c3ccda",
+    fontSize: 14,
+    lineHeight: 1.6,
   },
 
   field: {
     display: "flex",
     flexDirection: "column",
     gap: 8,
-    marginBottom: 16,
+    marginBottom: 18,
   },
 
   label: {
-    fontSize: 13,
-    fontWeight: 700,
-    color: "#cbd5e1",
+    fontSize: 14,
+    fontWeight: 800,
+    color: "#e5eefb",
+  },
+
+  inputWrap: {
+    position: "relative",
+    display: "flex",
+    alignItems: "center",
+  },
+
+  inputIcon: {
+    position: "absolute",
+    left: 16,
+    color: "#94a3b8",
   },
 
   input: {
     width: "100%",
-    padding: "14px 15px",
-    borderRadius: 14,
-    boxShadow: "0 0 0 1px rgba(34,211,238,0.35)",
-    background: "rgba(15,23,42,0.78)",
+    height: 50,
+    padding: "0 48px",
+    borderRadius: 12,
+    border: "1px solid rgba(59,130,246,0.45)",
+    background: "rgba(2,6,23,0.58)",
     color: "#ffffff",
     outline: "none",
-    fontSize: 15,
+    fontSize: 14,
     boxSizing: "border-box",
-    transition: "all 0.2s ease"
+  },
+
+  eyeButton: {
+    position: "absolute",
+    right: 12,
+    width: 32,
+    height: 32,
+    display: "grid",
+    placeItems: "center",
+    border: "none",
+    background: "transparent",
+    color: "#94a3b8",
+    cursor: "pointer",
+  },
+
+  optionsRow: {
+    display: "flex",
+    justifyContent: "space-between",
+    alignItems: "center",
+    gap: 16,
+    margin: "2px 0 22px",
+  },
+
+  rememberRow: {
+    display: "flex",
+    alignItems: "center",
+    gap: 8,
+    color: "#d7deea",
+    fontSize: 12,
+  },
+
+  checkbox: {
+    width: 15,
+    height: 15,
+    accentColor: "#3b82f6",
+  },
+
+  linkButton: {
+    border: "none",
+    background: "transparent",
+    color: "#38bdf8",
+    fontSize: 12,
+    fontWeight: 700,
+    cursor: "pointer",
+    padding: 0,
   },
 
   error: {
-    margin: "4px 0 16px",
-    color: "#f87171",
-    fontSize: 13,
+    height: 20,
+    margin: "0 0 16px",
+    color: "#fca5a5",
+    fontSize: 14,
+    fontWeight: 800,
+    lineHeight: "20px",
   },
 
   button: {
     width: "100%",
-    marginTop: 4,
-    padding: "14px 18px",
-    borderRadius: 14,
+    height: 52,
+    borderRadius: 12,
     border: "none",
     cursor: "pointer",
-    background: "linear-gradient(90deg, #06b6d4, #2563eb)",
+    background:
+      "linear-gradient(90deg, #2ea8ff 0%, #4d7cff 52%, #8b2cf5 100%)",
     color: "#ffffff",
     fontWeight: 900,
-    fontSize: 15,
-    boxShadow: "0 14px 32px rgba(37,99,235,0.38)",
+    fontSize: 14,
+    boxShadow: "0 8px 24px rgba(79,124,255,0.22)",
+    transition: "all 0.25s ease",
   },
 
   buttonDisabled: {
     opacity: 0.6,
     cursor: "not-allowed",
     boxShadow: "none",
+  },
+
+  divider: {
+    display: "grid",
+    gridTemplateColumns: "1fr auto 1fr",
+    alignItems: "center",
+    gap: 16,
+    margin: "24px 0",
+  },
+
+  dividerLine: {
+    height: 1,
+    background: "rgba(148,163,184,0.22)",
+  },
+
+  dividerText: {
+    color: "#94a3b8",
+    fontSize: 13,
+  },
+
+  secondaryButton: {
+    width: "100%",
+    height: 52,
+    borderRadius: 12,
+    border: "1px solid rgba(148,163,184,0.28)",
+    background: "rgba(15,23,42,0.25)",
+    color: "#f1f5f9",
+    fontWeight: 800,
+    fontSize: 14,
+    cursor: "pointer",
+  },
+
+  helpText: {
+    margin: "26px 0 0",
+    textAlign: "center",
+    color: "#9aa7bb",
+    fontSize: 13,
+    lineHeight: 1.6,
+  },
+
+  helpLink: {
+    color: "#38bdf8",
+  },
+
+  footer: {
+    position: "absolute",
+    left: 0,
+    right: 0,
+    bottom: 24,
+    zIndex: 1,
+    display: "flex",
+    justifyContent: "center",
+    gap: 32,
+    color: "#7f8ca3",
+    fontSize: 12,
   },
 };
