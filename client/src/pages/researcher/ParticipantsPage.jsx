@@ -8,6 +8,54 @@ import InviteParticipantModal from "../../components/researcher/InviteParticipan
 import ParticipantsTable from "../../components/researcher/ParticipantsTable";
 import { researcherApi } from "../../api/researcherApi";
 
+const assessmentNameMap = {
+  psqi: "PSQI",
+  avlt: "AVLT",
+  avltDelayedRecall: "AVLT Delayed Recall",
+  avltRecognition: "AVLT Recognition",
+  nback: "N-Back",
+  fingerTap: "Finger Tapping",
+  stroop: "Stroop",
+  digitSpan: "Digit Span",
+  pvt: "PVT",
+  ess: "ESS",
+  kss: "KSS",
+};
+
+const getStudySessions = (study) =>
+  study?.protocol?.sessions?.length
+    ? study.protocol.sessions
+    : study?.sessions || [];
+
+const getSessionAssessments = (session) =>
+  session?.assessments?.length ? session.assessments : session?.tasks || [];
+
+const getAssessmentLabel = (assessment) => {
+  const key = assessment?.assessmentId || assessment?.type || assessment?.name;
+  return assessmentNameMap[key] || assessment?.name || key || "Assessment";
+};
+
+const getSessionDelayLabel = (session) => {
+  const offsetDays = Number(session?.offsetDays || 0);
+
+  if (offsetDays > 0) {
+    return `Opens after ${offsetDays} day${offsetDays === 1 ? "" : "s"}`;
+  }
+
+  const unlockHours = Number(session?.unlockAfterHours || 0);
+
+  if (unlockHours > 0) {
+    if (unlockHours % 24 === 0) {
+      const days = unlockHours / 24;
+      return `Opens after ${days} day${days === 1 ? "" : "s"}`;
+    }
+
+    return `Opens after ${unlockHours} hour${unlockHours === 1 ? "" : "s"}`;
+  }
+
+  return "Available immediately";
+};
+
 export default function ParticipantsPage() {
   const [studies, setStudies] = useState([]);
   const [searchTerm, setSearchTerm] = useState("");
@@ -24,6 +72,20 @@ export default function ParticipantsPage() {
   const selectedStudy = useMemo(() => {
     return studies.find((study) => study._id === selectedStudyId);
   }, [studies, selectedStudyId]);
+
+  const studySessions = useMemo(
+    () => getStudySessions(selectedStudy),
+    [selectedStudy]
+  );
+
+  const totalAssessments = useMemo(
+    () =>
+      studySessions.reduce(
+        (sum, session) => sum + getSessionAssessments(session).length,
+        0
+      ),
+    [studySessions]
+  );
 
   const filteredParticipants = useMemo(() => {
     const query = searchTerm.trim().toLowerCase();
@@ -152,7 +214,19 @@ export default function ParticipantsPage() {
       {error && <div style={styles.error}>{error}</div>}
 
       <section style={styles.card}>
-        <h2 style={styles.sectionTitle}>Selected Study</h2>
+        <div style={styles.studyHeader}>
+          <div>
+            <h2 style={styles.sectionTitle}>Selected Study</h2>
+            <p style={styles.eyebrow}>Active study</p>
+          </div>
+
+          {selectedStudy && (
+            <div style={styles.studyStats}>
+              <span>{studySessions.length} sessions</span>
+              <span>{totalAssessments} assessments</span>
+            </div>
+          )}
+        </div>
 
         <StudySelector
           studies={studies}
@@ -162,9 +236,46 @@ export default function ParticipantsPage() {
         />
 
         {selectedStudy && (
-          <p style={styles.muted}>
-            Managing participants for {selectedStudy.title}
-          </p>
+          <>
+            <p style={styles.muted}>
+              Managing participants for{" "}
+              <span style={styles.highlight}>{selectedStudy.title}</span>
+            </p>
+
+            <div style={styles.protocolSummary}>
+              {studySessions.map((session, index) => {
+                const assessments = getSessionAssessments(session);
+
+                return (
+                  <div
+                    key={`${session.order || index}-${index}`}
+                    style={styles.sessionPill}
+                  >
+                    <div style={styles.sessionTopRow}>
+                      <p style={styles.sessionName}>
+                        {session.label || session.name || `Session ${index + 1}`}
+                      </p>
+
+                      <span style={styles.sessionBadge}>
+                        {assessments.length} assessment
+                        {assessments.length === 1 ? "" : "s"}
+                      </span>
+                    </div>
+
+                    <p style={styles.sessionDelay}>
+                      {getSessionDelayLabel(session)}
+                    </p>
+
+                    <p style={styles.assessmentList}>
+                      {assessments.length
+                        ? assessments.map(getAssessmentLabel).join(" · ")
+                        : "No assessments configured"}
+                    </p>
+                  </div>
+                );
+              })}
+            </div>
+          </>
         )}
       </section>
 
@@ -230,12 +341,35 @@ const styles = {
     marginBottom: 24,
   },
 
+  studyHeader: {
+    display: "flex",
+    justifyContent: "space-between",
+    alignItems: "flex-start",
+    gap: 16,
+    marginBottom: 16,
+  },
+
   sectionTitle: {
     margin: 0,
-    marginBottom: 16,
+    marginBottom: 8,
     fontSize: 18,
     fontWeight: 700,
     color: "#ffffff",
+  },
+
+  eyebrow: {
+    margin: 0,
+    color: "#94a3b8",
+    fontSize: 11,
+    fontWeight: 800,
+    letterSpacing: "0.18em",
+    textTransform: "uppercase",
+  },
+
+  studyStats: {
+    display: "flex",
+    gap: 8,
+    flexWrap: "wrap",
   },
 
   sectionHeader: {
@@ -265,6 +399,11 @@ const styles = {
     fontSize: 14,
   },
 
+  highlight: {
+    color: "#e2e8f0",
+    fontWeight: 700,
+  },
+
   error: {
     padding: 14,
     marginBottom: 24,
@@ -273,5 +412,56 @@ const styles = {
     border: "1px solid rgba(248,113,113,0.28)",
     color: "#fecaca",
     fontSize: 14,
+  },
+
+  protocolSummary: {
+    marginTop: 18,
+    display: "grid",
+    gridTemplateColumns: "repeat(auto-fit, minmax(300px, 1fr))",
+    gap: 12,
+  },
+
+  sessionPill: {
+    padding: 16,
+    borderRadius: 14,
+    background: "rgba(15, 23, 42, 0.62)",
+    border: "1px solid rgba(148, 163, 184, 0.14)",
+  },
+
+  sessionTopRow: {
+    display: "flex",
+    justifyContent: "space-between",
+    gap: 10,
+    alignItems: "center",
+  },
+
+  sessionName: {
+    margin: 0,
+    color: "#ffffff",
+    fontSize: 13,
+    fontWeight: 800,
+  },
+
+  sessionBadge: {
+    padding: "4px 8px",
+    borderRadius: 999,
+    background: "rgba(56, 189, 248, 0.12)",
+    color: "#67e8f9",
+    fontSize: 11,
+    fontWeight: 800,
+  },
+
+  sessionDelay: {
+    margin: "8px 0 0",
+    color: "#60a5fa",
+    fontSize: 12,
+    fontWeight: 700,
+  },
+
+  assessmentList: {
+    margin: "8px 0 0",
+    color: "#94a3b8",
+    fontSize: 13,
+    lineHeight: 1.5,
   },
 };

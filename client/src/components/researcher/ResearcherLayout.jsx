@@ -4,8 +4,8 @@ import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useResearcherAuth } from "../../hooks/useResearcherAuth";
 
 const navItems = [
-  { label: "Dashboard", path: "/researcher/dashboard" },
   { label: "Participants", path: "/researcher/participants" },
+  { label: "Studies", path: "/researcher/studies" },
   { label: "Exports", path: "/researcher/exports" },
 ];
 
@@ -29,7 +29,9 @@ export default function ResearcherLayout({ children }) {
 
         <nav style={styles.nav}>
           {navItems.map((item) => {
-            const active = location.pathname === item.path;
+            const active =
+              location.pathname === item.path ||
+              location.pathname.startsWith(`${item.path}/`);
 
             return (
               <Link

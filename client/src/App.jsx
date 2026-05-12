@@ -7,10 +7,11 @@ import SessionComplete from "./pages/participant/SessionComplete";
 import ParticipantComplete from "./pages/participant/ParticipantComplete";
 
 import ResearcherLogin from "./pages/researcher/ResearcherLogin";
-import ResearcherDashboard from "./pages/researcher/ResearcherDashboard";
 import ParticipantsPage from "./pages/researcher/ParticipantsPage";
 import ExportsPage from "./pages/researcher/ExportsPage";
+import CreateStudyPage from "./pages/researcher/CreateStudyPage";
 import StudyDetail from "./pages/researcher/StudyDetail";
+import StudiesPage from "./pages/researcher/StudiesPage";
 
 import { ResearcherAuthProvider } from "./context/ResearcherAuthContext";
 import ResearcherProtectedRoute from "./routes/ResearcherProtectedRoute";
@@ -19,7 +20,8 @@ function App() {
   return (
     <ResearcherAuthProvider>
       <Routes>
-        <Route path="/" element={<Navigate to="/researcher/login" replace />} />
+        {/* <Route path="/" element={<Navigate to="/researcher/login" replace />} /> */}
+        <Route path="/" element={<Navigate to="/researcher/participants" replace />} />
 
         <Route path="/participant/start" element={<ParticipantStart />} />
         <Route path="/participant/session" element={<ParticipantSession />} />
@@ -31,9 +33,14 @@ function App() {
 
         <Route
           path="/researcher/dashboard"
+          element={<Navigate to="/researcher/participants" replace />}
+        />
+
+        <Route
+          path="/researcher/studies"
           element={
             <ResearcherProtectedRoute>
-              <ResearcherDashboard />
+              <StudiesPage />
             </ResearcherProtectedRoute>
           }
         />
@@ -52,6 +59,15 @@ function App() {
           element={
             <ResearcherProtectedRoute>
               <ExportsPage />
+            </ResearcherProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/researcher/studies/new"
+          element={
+            <ResearcherProtectedRoute>
+              <CreateStudyPage />
             </ResearcherProtectedRoute>
           }
         />

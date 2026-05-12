@@ -38,7 +38,7 @@ export default function ResearcherLogin() {
         user: response.data.user,
       });
 
-      navigate("/researcher/dashboard", { replace: true });
+      navigate("/researcher/participants", { replace: true });
     } catch (err) {
       setError(err?.response?.data?.message || "Failed to sign in.");
     } finally {

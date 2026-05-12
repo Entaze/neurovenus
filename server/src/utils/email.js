@@ -8,7 +8,12 @@ const getResendClient = () => {
   return new Resend(process.env.RESEND_API_KEY);
 };
 
-const sendEmail = async ({ to, subject, html, text }) => {
+const sendEmail = async ({
+  to,
+  subject,
+  html,
+  text,
+}) => {
   const resend = getResendClient();
 
   if (!resend) {
@@ -16,11 +21,143 @@ const sendEmail = async ({ to, subject, html, text }) => {
     return null;
   }
 
+  const wrappedHtml = `
+  <!DOCTYPE html>
+  <html>
+    <head>
+      <meta charset="UTF-8" />
+      <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+      <title>${subject}</title>
+    </head>
+    <body style="
+      margin: 0;
+      padding: 0;
+      background: #020617;
+      font-family: Inter, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      color: #e2e8f0;
+    ">
+      <table
+        width="100%"
+        cellpadding="0"
+        cellspacing="0"
+        style="background: #020617; padding: 40px 20px;"
+      >
+        <tr>
+          <td align="center">
+            <table
+              width="100%"
+              cellpadding="0"
+              cellspacing="0"
+              style="
+                max-width: 640px;
+                background: linear-gradient(180deg, #0f172a 0%, #020617 100%);
+                border: 1px solid rgba(148, 163, 184, 0.12);
+                border-radius: 24px;
+                overflow: hidden;
+                box-shadow:
+                  0 20px 60px rgba(0, 0, 0, 0.45),
+                  inset 0 1px 0 rgba(255,255,255,0.03);
+              "
+            >
+              <!-- Header -->
+              <tr>
+                <td
+                  style="
+                    padding: 40px 48px 24px;
+                    background:
+                      radial-gradient(circle at top right, rgba(59,130,246,0.18), transparent 40%),
+                      radial-gradient(circle at top left, rgba(14,165,233,0.12), transparent 35%);
+                  "
+                >
+                  <div
+                    style="
+                      font-size: 28px;
+                      font-weight: 800;
+                      color: #ffffff;
+                      letter-spacing: -0.03em;
+                    "
+                  >
+                    Neurovenus
+                  </div>
+
+                  <div
+                    style="
+                      margin-top: 8px;
+                      font-size: 14px;
+                      color: #94a3b8;
+                      line-height: 1.6;
+                    "
+                  >
+                    Remote cognitive and sleep research platform
+                  </div>
+                </td>
+              </tr>
+
+              <!-- Content -->
+              <tr>
+                <td
+                  style="
+                    padding: 0 48px 48px;
+                    font-size: 16px;
+                    line-height: 1.8;
+                    color: #cbd5e1;
+                  "
+                >
+                  ${html}
+                </td>
+              </tr>
+
+              <!-- Footer -->
+              <tr>
+                <td
+                  style="
+                    padding: 24px 48px 40px;
+                    border-top: 1px solid rgba(148, 163, 184, 0.08);
+                    font-size: 13px;
+                    line-height: 1.7;
+                    color: #64748b;
+                  "
+                >
+                  You are receiving this email because you were invited to
+                  participate in a study hosted on Neurovenus.
+
+                  <br /><br />
+
+                  Questions? Contact the study team or reply to this email.
+
+                  <br /><br />
+
+                  <span style="color: #475569;">
+                    © ${new Date().getFullYear()} Neurovenus.
+                    All rights reserved.
+                  </span>
+                </td>
+              </tr>
+            </table>
+
+            <div
+              style="
+                margin-top: 18px;
+                font-size: 12px;
+                color: #475569;
+              "
+            >
+              Secure research infrastructure for cognitive science.
+            </div>
+          </td>
+        </tr>
+      </table>
+    </body>
+  </html>
+  `;
+
   const { data, error } = await resend.emails.send({
-    from: process.env.EMAIL_FROM || "Neurovenus <onboarding@resend.dev>",
+    from:
+      process.env.EMAIL_FROM ||
+      "Neurovenus Research <onboarding@resend.dev>",
     to,
     subject,
-    html,
+    html: wrappedHtml,
     text,
   });
 

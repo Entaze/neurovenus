@@ -89,6 +89,34 @@ const getStudies = async (req, res) => {
   }
 };
 
+const getStudyById = async (req, res) => {
+  try {
+    const { studyId } = req.params;
+
+    const study = await Study.findById(studyId);
+
+    if (!study) {
+      return res.status(404).json({
+        success: false,
+        message: "Study not found",
+      });
+    }
+
+    res.json({
+      success: true,
+      study,
+    });
+  } catch (error) {
+    console.error("Failed to fetch study:", error);
+
+    res.status(500).json({
+      success: false,
+      message: "Failed to fetch study",
+      error: error.message,
+    });
+  }
+};
+
 const updateStudy = async (req, res) => {
   try {
     const { studyId } = req.params;
@@ -127,5 +155,6 @@ const updateStudy = async (req, res) => {
 module.exports = {
   createStudy,
   getStudies,
+  getStudyById,
   updateStudy,
 };

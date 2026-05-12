@@ -6,6 +6,11 @@ export const researcherApi = {
     return data;
   },
 
+  async getStudy(studyId) {
+    const { data } = await api.get(`/studies/${studyId}`);
+    return data;
+  },
+
   async createStudy(payload) {
     const { data } = await api.post("/studies", payload);
     return data;
