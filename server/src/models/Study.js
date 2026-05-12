@@ -59,6 +59,17 @@ const sessionSchema = new mongoose.Schema(
       default: 0,
     },
 
+    delayValue: {
+      type: Number,
+      default: 0,
+    },
+
+    delayUnit: {
+      type: String,
+      enum: ["minutes", "hours", "days"],
+      default: "days",
+    },
+
     unlockAfterHours: {
       type: Number,
       default: 0,
