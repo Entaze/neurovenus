@@ -26,8 +26,9 @@ const sessionRunSchema = new mongoose.Schema(
 
     protocolVersion: {
       type: String,
-      enum: ["v1", "v2"],
       required: true,
+      default: "custom",
+      enum: ["v1", "v2", "combined-v1-v2", "custom"],
     },
 
     status: {
