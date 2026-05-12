@@ -2,17 +2,55 @@ const Study = require("../models/Study");
 
 const createStudy = async (req, res) => {
   try {
+    const incomingProtocolSessions = req.body?.protocol?.sessions || [];
+    const incomingLegacySessions = req.body.sessions || [];
+
+    const sourceSessions = incomingProtocolSessions.length
+      ? incomingProtocolSessions
+      : incomingLegacySessions;
+
+    const normalizedSessions = sourceSessions.map((session, sessionIndex) => {
+      const sourceAssessments = session.assessments?.length
+        ? session.assessments
+        : session.tasks || [];
+
+      const normalizedAssessments = sourceAssessments.map(
+        (assessment, assessmentIndex) => ({
+          assessmentId: assessment.assessmentId || assessment.type,
+          type: assessment.type || assessment.assessmentId,
+          version: assessment.version || "v1",
+          order: assessment.order || assessmentIndex + 1,
+          config: assessment.config || {},
+        })
+      );
+
+      return {
+        ...session,
+        name: session.name || session.label || `Session ${sessionIndex + 1}`,
+        label: session.label || session.name || `Session ${sessionIndex + 1}`,
+        order: session.order || sessionIndex + 1,
+        protocolVersion: session.protocolVersion || "custom",
+        offsetDays: session.offsetDays || 0,
+        unlockAfterHours: session.unlockAfterHours || 0,
+        expiresAfterHours: session.expiresAfterHours || 24,
+        assessments: normalizedAssessments,
+
+        // Backward compatibility for existing execution/export logic.
+        tasks: normalizedAssessments,
+      };
+    });
+
     const payload = {
       ...req.body,
-      protocolVersion: req.body.protocolVersion || "combined-v1-v2",
-      sessions: (req.body.sessions || []).map((session) => ({
-        ...session,
-        protocolVersion:
-          session.protocolVersion ||
-          session.tasks?.[0]?.version ||
-          req.body.protocolVersion ||
-          "v2",
-      })),
+      protocolVersion: req.body.protocolVersion || "custom",
+      protocol: {
+        type: req.body?.protocol?.type || "custom",
+        version: req.body?.protocol?.version || "v1",
+        sessions: normalizedSessions,
+      },
+
+      // Backward compatibility for existing app screens/controllers.
+      sessions: normalizedSessions,
     };
 
     const study = await Study.create(payload);
