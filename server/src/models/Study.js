@@ -1,7 +1,12 @@
 const mongoose = require("mongoose");
 
-const taskSchema = new mongoose.Schema(
+const assessmentSchema = new mongoose.Schema(
   {
+    assessmentId: {
+      type: String,
+      required: true,
+    },
+
     type: {
       type: String,
       required: true,
@@ -10,7 +15,11 @@ const taskSchema = new mongoose.Schema(
     version: {
       type: String,
       default: "v1",
-      enum: ["v1", "v2"],
+    },
+
+    order: {
+      type: Number,
+      default: 1,
     },
 
     config: {
@@ -30,6 +39,11 @@ const sessionSchema = new mongoose.Schema(
       required: true,
     },
 
+    label: {
+      type: String,
+      default: "",
+    },
+
     order: {
       type: Number,
       required: true,
@@ -37,8 +51,12 @@ const sessionSchema = new mongoose.Schema(
 
     protocolVersion: {
       type: String,
-      required: true,
-      enum: ["v1", "v2"],
+      default: "custom",
+    },
+
+    offsetDays: {
+      type: Number,
+      default: 0,
     },
 
     unlockAfterHours: {
@@ -51,7 +69,10 @@ const sessionSchema = new mongoose.Schema(
       default: 24,
     },
 
-    tasks: [taskSchema],
+    assessments: [assessmentSchema],
+
+    // Temporary backward compatibility with existing Cognimeo data/logic.
+    tasks: [assessmentSchema],
   },
   {
     _id: false,
@@ -72,8 +93,24 @@ const studySchema = new mongoose.Schema(
 
     protocolVersion: {
       type: String,
-      default: "combined-v1-v2",
-      enum: ["v1", "v2", "combined-v1-v2"],
+      default: "custom",
+    },
+
+    protocol: {
+      type: {
+        type: String,
+        default: "custom",
+      },
+
+      version: {
+        type: String,
+        default: "v1",
+      },
+
+      sessions: {
+        type: [sessionSchema],
+        default: [],
+      },
     },
 
     createdBy: {
@@ -81,6 +118,7 @@ const studySchema = new mongoose.Schema(
       ref: "User",
     },
 
+    // Temporary backward compatibility with existing app screens/controllers.
     sessions: [sessionSchema],
 
     active: {
