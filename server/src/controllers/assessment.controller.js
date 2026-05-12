@@ -4,6 +4,14 @@ const AssessmentRun = require("../models/AssessmentRun");
 const Participant = require("../models/Participant");
 const { isRegisteredAssessment } = require("../assessments/registry");
 
+const getStudySessions = (study) =>
+  study?.protocol?.sessions?.length ? study.protocol.sessions : study.sessions || [];
+
+const getSessionAssessments = (sessionDefinition) =>
+  sessionDefinition?.assessments?.length
+    ? sessionDefinition.assessments
+    : sessionDefinition?.tasks || [];
+
 const completeTask = async (req, res) => {
   try {
     const {
@@ -65,18 +73,22 @@ const completeTask = async (req, res) => {
     sessionRun.completedTaskTypes.push(taskType);
     sessionRun.currentTaskIndex += 1;
 
-    const sessionDefinition = study.sessions.find(
+    const studySessions = getStudySessions(study);
+
+    const sessionDefinition = studySessions.find(
       (session) => session.order === sessionRun.sessionOrder
     );
 
+    const sessionAssessments = getSessionAssessments(sessionDefinition);
+
     if (
       sessionDefinition &&
-      sessionRun.currentTaskIndex >= sessionDefinition.tasks.length
+      sessionRun.currentTaskIndex >= sessionAssessments.length
     ) {
       sessionRun.status = "completed";
       sessionRun.completedAt = new Date();
 
-      const nextSessionDefinition = study.sessions.find(
+      const nextSessionDefinition = studySessions.find(
         (session) => session.order === sessionRun.sessionOrder + 1
       );
 
