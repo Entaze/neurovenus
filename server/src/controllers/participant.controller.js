@@ -1,17 +1,3 @@
-const crypto = require("crypto");
-const bcrypt = require("bcryptjs");
-
-const Study = require("../models/Study");
-const Participant = require("../models/Participant");
-const SessionRun = require("../models/SessionRun");
-const {
-  sendParticipantInviteEmail,
-} = require("../utils/email");
-
-const generateParticipantCode = () => {
-  return `CV-${crypto.randomBytes(3).toString("hex").toUpperCase()}`;
-};
-
 function deriveParticipantStatus(sessionRuns = []) {
   if (!sessionRuns.length) return "invited";
 
@@ -95,6 +81,19 @@ const inviteParticipant = async (req, res) => {
       });
     }
 
+    // Use protocol.sessions if available, otherwise fall back to legacy sessions.
+    const studySessions =
+      study?.protocol?.sessions?.length
+        ? study.protocol.sessions
+        : study.sessions || [];
+
+    if (!studySessions.length) {
+      return res.status(400).json({
+        success: false,
+        message: "Study has no configured sessions.",
+      });
+    }
+
     const tokenId = crypto.randomUUID();
     const tokenSecret = crypto.randomBytes(32).toString("hex");
     const rawToken = `${tokenId}.${tokenSecret}`;
@@ -117,15 +116,15 @@ const inviteParticipant = async (req, res) => {
     const now = new Date();
 
     const sessionRuns = await Promise.all(
-      study.sessions.map((session) => {
+      studySessions.map((session) => {
         const opensAt = session.order === 1 ? now : null;
 
         return SessionRun.create({
           participantId: participant._id,
           studyId,
-          sessionName: session.name,
+          sessionName: session.label || session.name,
           sessionOrder: session.order,
-          protocolVersion: session.protocolVersion,
+          protocolVersion: session.protocolVersion || "custom",
           status: session.order === 1 ? "available" : "locked",
           opensAt,
           expiresAt: null,
