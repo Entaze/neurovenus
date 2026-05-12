@@ -9,6 +9,10 @@ const {
   sendParticipantInviteEmail,
 } = require("../utils/email");
 
+const generateParticipantCode = () => {
+  return `NV-${crypto.randomBytes(3).toString("hex").toUpperCase()}`;
+};
+
 function deriveParticipantStatus(sessionRuns = []) {
   if (!sessionRuns.length) return "invited";
 
