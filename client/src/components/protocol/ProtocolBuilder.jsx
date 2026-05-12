@@ -1,39 +1,120 @@
 import { useMemo, useState } from "react";
 import SessionEditor from "./SessionEditor";
 
+const delayToTiming = (delayValue = 0, delayUnit = "days") => {
+  const value = Number(delayValue || 0);
+
+  if (delayUnit === "minutes") {
+    return {
+      offsetDays: value / 1440,
+      unlockAfterHours: value / 60,
+    };
+  }
+
+  if (delayUnit === "hours") {
+    return {
+      offsetDays: value / 24,
+      unlockAfterHours: value,
+    };
+  }
+
+  return {
+    offsetDays: value,
+    unlockAfterHours: value * 24,
+  };
+};
+
+const hydrateSessionTiming = (session, order) => {
+  if (session.delayValue !== undefined && session.delayUnit) {
+    return session;
+  }
+
+  const unlockAfterHours = Number(session.unlockAfterHours || 0);
+
+  if (unlockAfterHours > 0) {
+    if (unlockAfterHours % 24 === 0) {
+      return {
+        ...session,
+        delayValue: unlockAfterHours / 24,
+        delayUnit: "days",
+      };
+    }
+
+    return {
+      ...session,
+      delayValue: unlockAfterHours,
+      delayUnit: "hours",
+    };
+  }
+
+  return {
+    ...session,
+    delayValue: order === 1 ? 0 : Number(session.offsetDays || order - 1),
+    delayUnit: "days",
+  };
+};
+
+const normalizeSession = (session, sessionIndex) => {
+  const order = sessionIndex + 1;
+  const delayValue = Number(session.delayValue || 0);
+  const delayUnit = session.delayUnit || "days";
+  const timing = delayToTiming(delayValue, delayUnit);
+
+  return {
+    ...session,
+    ...timing,
+    delayValue,
+    delayUnit,
+    order,
+    name: session.name || session.label || `Session ${order}`,
+    label: session.label || session.name || `Session ${order}`,
+    expiresAfterHours: session.expiresAfterHours || 24,
+    protocolVersion: session.protocolVersion || "custom",
+    assessments: (session.assessments || []).map(
+      (assessment, assessmentIndex) => ({
+        assessmentId: assessment.assessmentId || assessment.type,
+        type: assessment.type || assessment.assessmentId,
+        version: assessment.version || "v1",
+        order: assessmentIndex + 1,
+        config: assessment.config || {},
+
+        name: assessment.name,
+        category: assessment.category,
+        description: assessment.description,
+      })
+    ),
+  };
+};
+
 const createDefaultSession = (order = 1) => ({
   label: `Session ${order}`,
   name: `Session ${order}`,
   order,
-  offsetDays: order === 1 ? 0 : order - 1,
-  unlockAfterHours: order === 1 ? 0 : 24 * (order - 1),
+  delayValue: order === 1 ? 0 : 1,
+  delayUnit: order === 1 ? "days" : "days",
+  offsetDays: order === 1 ? 0 : 1,
+  unlockAfterHours: order === 1 ? 0 : 24,
   expiresAfterHours: 24,
   protocolVersion: "custom",
   assessments: [],
 });
 
 export default function ProtocolBuilder({ value, onChange }) {
-  const [sessions, setSessions] = useState(
-    value?.sessions?.length ? value.sessions : [createDefaultSession(1)]
-  );
+  const [sessions, setSessions] = useState(() => {
+    if (value?.sessions?.length) {
+      return value.sessions.map((session, index) =>
+        hydrateSessionTiming(session, index + 1)
+      );
+    }
+
+    return [createDefaultSession(1)];
+  });
 
   const protocol = useMemo(
     () => ({
       type: "custom",
       version: "v1",
-      sessions: sessions.map((session, sessionIndex) => ({
-        ...session,
-        order: sessionIndex + 1,
-        name: session.name || session.label || `Session ${sessionIndex + 1}`,
-        label: session.label || session.name || `Session ${sessionIndex + 1}`,
-        assessments: session.assessments.map((assessment, assessmentIndex) => ({
-          assessmentId: assessment.assessmentId || assessment.type,
-          type: assessment.type || assessment.assessmentId,
-          version: assessment.version || "v1",
-          order: assessmentIndex + 1,
-          config: assessment.config || {},
-        })),
-      })),
+      sessions: sessions.map(normalizeSession),
     }),
     [sessions]
   );
@@ -42,19 +123,7 @@ export default function ProtocolBuilder({ value, onChange }) {
     const nextProtocol = {
       type: "custom",
       version: "v1",
-      sessions: nextSessions.map((session, sessionIndex) => ({
-        ...session,
-        order: sessionIndex + 1,
-        name: session.name || session.label || `Session ${sessionIndex + 1}`,
-        label: session.label || session.name || `Session ${sessionIndex + 1}`,
-        assessments: session.assessments.map((assessment, assessmentIndex) => ({
-          assessmentId: assessment.assessmentId || assessment.type,
-          type: assessment.type || assessment.assessmentId,
-          version: assessment.version || "v1",
-          order: assessmentIndex + 1,
-          config: assessment.config || {},
-        })),
-      })),
+      sessions: nextSessions.map(normalizeSession),
     };
 
     onChange?.(nextProtocol);

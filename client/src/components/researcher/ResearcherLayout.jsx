@@ -4,8 +4,8 @@ import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useResearcherAuth } from "../../hooks/useResearcherAuth";
 
 const navItems = [
-  { label: "Participants", path: "/researcher/participants" },
   { label: "Studies", path: "/researcher/studies" },
+  { label: "Participants", path: "/researcher/participants" },
   { label: "Exports", path: "/researcher/exports" },
 ];
 

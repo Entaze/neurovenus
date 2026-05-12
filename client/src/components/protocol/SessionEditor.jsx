@@ -1,6 +1,12 @@
 import AssessmentCard from "./AssessmentCard";
 import AssessmentPicker from "./AssessmentPicker";
 
+const delayUnits = [
+  { value: "minutes", label: "Minutes" },
+  { value: "hours", label: "Hours" },
+  { value: "days", label: "Days" },
+];
+
 export default function SessionEditor({
   session,
   sessionIndex,
@@ -21,8 +27,6 @@ export default function SessionEditor({
       version: "v1",
       order: session.assessments.length + 1,
       config: {},
-
-      // UI metadata
       name: assessment.name,
       category: assessment.category,
       description: assessment.description,
@@ -79,29 +83,54 @@ export default function SessionEditor({
           />
         </div>
 
-        <div style={styles.field}>
-          <label style={styles.label}>Offset Days</label>
-          <input
-            type="number"
-            min="0"
-            value={session.offsetDays}
-            onChange={(e) =>
-              updateSession({
-                offsetDays: Number(e.target.value || 0),
-              })
-            }
-            style={styles.input}
-          />
+        <div style={styles.delayGrid}>
+          <div style={styles.field}>
+            <label style={styles.label}>Delay Value</label>
+            <input
+              type="number"
+              min="0"
+              step="any"
+              value={session.delayValue ?? 0}
+              onChange={(e) =>
+                updateSession({
+                  delayValue: Number(e.target.value || 0),
+                })
+              }
+              style={styles.input}
+            />
+          </div>
+
+          <div style={styles.field}>
+            <label style={styles.label}>Delay Unit</label>
+            <select
+              value={session.delayUnit || "days"}
+              onChange={(e) =>
+                updateSession({
+                  delayUnit: e.target.value,
+                })
+              }
+              style={styles.input}
+            >
+              {delayUnits.map((unit) => (
+                <option key={unit.value} value={unit.value}>
+                  {unit.label}
+                </option>
+              ))}
+            </select>
+          </div>
         </div>
       </div>
+
+      <p style={styles.helpText}>
+        This controls when the session becomes available after the previous
+        session is completed. Use 0 for immediate access.
+      </p>
 
       <div style={styles.assessmentSection}>
         <h4 style={styles.sectionTitle}>Selected Assessments</h4>
 
         {session.assessments.length === 0 ? (
-          <div style={styles.emptyState}>
-            No assessments added yet.
-          </div>
+          <div style={styles.emptyState}>No assessments added yet.</div>
         ) : (
           <div style={styles.assessmentList}>
             {session.assessments.map((assessment, index) => (
@@ -125,7 +154,7 @@ const styles = {
   card: {
     display: "flex",
     flexDirection: "column",
-    gap: 28,
+    gap: 24,
     padding: 28,
     borderRadius: 28,
     background: "rgba(7, 15, 35, 0.72)",
@@ -169,8 +198,14 @@ const styles = {
 
   fieldGrid: {
     display: "grid",
-    gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))",
+    gridTemplateColumns: "minmax(260px, 1fr) minmax(320px, 1fr)",
     gap: 16,
+  },
+
+  delayGrid: {
+    display: "grid",
+    gridTemplateColumns: "1fr 1fr",
+    gap: 12,
   },
 
   field: {
@@ -194,6 +229,14 @@ const styles = {
     color: "#ffffff",
     fontSize: 14,
     outline: "none",
+    boxSizing: "border-box",
+  },
+
+  helpText: {
+    margin: "-10px 0 0",
+    color: "#94a3b8",
+    fontSize: 13,
+    lineHeight: 1.6,
   },
 
   assessmentSection: {

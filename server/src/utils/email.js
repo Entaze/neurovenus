@@ -176,30 +176,120 @@ const sendParticipantInviteEmail = async ({
   inviteLink,
   studyTitle,
 }) => {
-  return sendEmail({
-    to,
-    subject: `Your invitation to ${studyTitle}`,
-    text: `You have been invited to take part in ${studyTitle}.
+  const subject = `You're invited to participate in ${studyTitle}`;
 
-Participant ID: ${participantCode}
+  const text = `
+You have been invited to participate in ${studyTitle}.
 
-Start here: ${inviteLink}`,
-    html: `
-      <div style="font-family: Arial, sans-serif; line-height: 1.6;">
-        <h2>${studyTitle}</h2>
-        <p>You have been invited to take part in this research study.</p>
-        <p><strong>Participant ID:</strong> ${participantCode}</p>
+Participant Code: ${participantCode}
 
-        <p>
-          <a href="${inviteLink}" style="display:inline-block;padding:12px 18px;background:#2563eb;color:white;text-decoration:none;border-radius:8px;">
-            Start Study
-          </a>
+Start your study session:
+${inviteLink}
+  `.trim();
+
+  const html = `
+    <div style="padding-top: 8px;">
+      <p style="
+        margin: 0 0 18px;
+        color: #e2e8f0;
+        font-size: 18px;
+        font-weight: 700;
+        line-height: 1.5;
+      ">
+        You have been invited to participate in a research study.
+      </p>
+
+      <p style="
+        margin: 0 0 22px;
+        color: #cbd5e1;
+        font-size: 15px;
+        line-height: 1.8;
+      ">
+        The study team has invited you to complete a remote assessment session
+        for <strong style="color:#ffffff;">${studyTitle}</strong>.
+      </p>
+
+      <div style="
+        margin: 26px 0;
+        padding: 18px 20px;
+        border-radius: 18px;
+        background: rgba(15, 23, 42, 0.88);
+        border: 1px solid rgba(148, 163, 184, 0.14);
+      ">
+        <p style="
+          margin: 0 0 6px;
+          color: #94a3b8;
+          font-size: 12px;
+          font-weight: 700;
+          letter-spacing: 0.12em;
+          text-transform: uppercase;
+        ">
+          Participant Code
         </p>
 
-        <p>If the button does not work, copy and paste this link into your browser:</p>
-        <p>${inviteLink}</p>
+        <p style="
+          margin: 0;
+          color: #67e8f9;
+          font-size: 24px;
+          font-weight: 800;
+          letter-spacing: 0.08em;
+        ">
+          ${participantCode}
+        </p>
       </div>
-    `,
+
+      <p style="
+        margin: 0 0 28px;
+        color: #cbd5e1;
+        font-size: 15px;
+        line-height: 1.8;
+      ">
+        Please click the secure button below to begin when you are ready.
+      </p>
+
+      <a
+        href="${inviteLink}"
+        style="
+          display: inline-block;
+          padding: 14px 24px;
+          border-radius: 14px;
+          background: linear-gradient(90deg, #0ea5e9, #2563eb);
+          color: #ffffff;
+          text-decoration: none;
+          font-size: 15px;
+          font-weight: 800;
+          box-shadow: 0 12px 28px rgba(37, 99, 235, 0.25);
+        "
+      >
+        Start Study Session
+      </a>
+
+      <p style="
+        margin: 28px 0 0;
+        color: #94a3b8;
+        font-size: 13px;
+        line-height: 1.7;
+      ">
+        If the button does not work, copy and paste this secure link into your browser:
+      </p>
+
+      <p style="
+        margin: 8px 0 0;
+        color: #67e8f9;
+        font-size: 13px;
+        line-height: 1.7;
+        word-break: break-all;
+      ">
+        ${inviteLink}
+      </p>
+    </div>
+  `;
+
+  return sendEmail({
+    to,
+    subject,
+    html,
+    text,
   });
 };
 
