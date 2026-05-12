@@ -2,6 +2,7 @@ const SessionRun = require("../models/SessionRun");
 const Study = require("../models/Study");
 const AssessmentRun = require("../models/AssessmentRun");
 const Participant = require("../models/Participant");
+const { isRegisteredAssessment } = require("../assessments/registry");
 
 const completeTask = async (req, res) => {
   try {
@@ -17,6 +18,13 @@ const completeTask = async (req, res) => {
       return res.status(400).json({
         success: false,
         message: "sessionRunId and taskType are required",
+      });
+    }
+
+    if (!isRegisteredAssessment(taskType)) {
+      return res.status(400).json({
+        success: false,
+        message: `Unknown assessment type: ${taskType}`,
       });
     }
 
@@ -42,7 +50,7 @@ const completeTask = async (req, res) => {
       status: "active",
     });
 
-    const taskRun = await AssessmentRun.create({
+    const assessmentRun = await AssessmentRun.create({
       participantId: sessionRun.participantId,
       sessionRunId: sessionRun._id,
       studyId: sessionRun.studyId,
@@ -112,7 +120,7 @@ const completeTask = async (req, res) => {
 
     return res.status(201).json({
       success: true,
-      taskRun,
+      assessmentRun,
       sessionRun,
     });
   } catch (error) {
@@ -120,7 +128,7 @@ const completeTask = async (req, res) => {
 
     return res.status(500).json({
       success: false,
-      message: "Failed to complete task",
+      message: "Failed to complete assessment",
     });
   }
 };
