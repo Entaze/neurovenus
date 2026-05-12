@@ -1,6 +1,19 @@
 const SessionRun = require("../models/SessionRun");
 const Study = require("../models/Study");
 
+const getStudySessions = (study) =>
+  study?.protocol?.sessions?.length ? study.protocol.sessions : study.sessions || [];
+
+const getSessionAssessments = (sessionDefinition) =>
+  sessionDefinition?.assessments?.length
+    ? sessionDefinition.assessments
+    : sessionDefinition?.tasks || [];
+
+const normalizeAssessmentForClient = (assessment) => ({
+  ...assessment,
+  type: assessment.type || assessment.assessmentId,
+});
+
 const startSession = async (req, res) => {
   try {
     const { sessionRunId } = req.params;
@@ -63,7 +76,9 @@ const getCurrentTask = async (req, res) => {
       });
     }
 
-    const sessionDefinition = study.sessions.find(
+    const studySessions = getStudySessions(study);
+
+    const sessionDefinition = studySessions.find(
       (session) => session.order === sessionRun.sessionOrder
     );
 
@@ -74,22 +89,35 @@ const getCurrentTask = async (req, res) => {
       });
     }
 
-    const task = sessionDefinition.tasks[sessionRun.currentTaskIndex];
+    const assessments = getSessionAssessments(sessionDefinition);
+    const currentAssessment = assessments[sessionRun.currentTaskIndex];
 
-    if (!task) {
+    if (!currentAssessment) {
       return res.json({
         success: true,
         completed: true,
-        message: "All tasks completed for this session.",
+        message: "All assessments completed for this session.",
       });
     }
+
+    const task = normalizeAssessmentForClient(currentAssessment);
 
     res.json({
       success: true,
       completed: false,
+
+      // Temporary legacy key used by current frontend.
       task,
+
+      // New preferred key for Neurovenus.
+      assessment: task,
+
       taskIndex: sessionRun.currentTaskIndex,
-      totalTasks: sessionDefinition.tasks.length,
+      assessmentIndex: sessionRun.currentTaskIndex,
+
+      totalTasks: assessments.length,
+      totalAssessments: assessments.length,
+
       sessionRun,
     });
   } catch (error) {
@@ -97,7 +125,7 @@ const getCurrentTask = async (req, res) => {
 
     res.status(500).json({
       success: false,
-      message: "Failed to fetch current task",
+      message: "Failed to fetch current assessment",
     });
   }
 };
