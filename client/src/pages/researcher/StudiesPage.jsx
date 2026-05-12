@@ -52,6 +52,10 @@ export default function StudiesPage() {
           <p style={styles.subtitle}>
             Create, manage, and monitor all of your research studies.
           </p>
+          <p style={styles.infoNote}>
+            Protocols are locked after creation to preserve data integrity. To make
+            changes, create a new study version.
+          </p>
         </div>
 
         <button
@@ -232,5 +236,18 @@ const styles = {
     border: "1px solid rgba(248,113,113,0.28)",
     color: "#fecaca",
     fontSize: 14,
+  },
+
+  infoNote: {
+    marginTop: 12,
+    marginBottom: 0,
+    padding: "12px 14px",
+    borderRadius: 12,
+    background: "rgba(14, 165, 233, 0.08)",
+    border: "1px solid rgba(14, 165, 233, 0.14)",
+    color: "#bae6fd",
+    fontSize: 13,
+    lineHeight: 1.6,
+    maxWidth: 760,
   },
 };
