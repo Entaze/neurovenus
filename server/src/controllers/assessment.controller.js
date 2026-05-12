@@ -1,6 +1,6 @@
 const SessionRun = require("../models/SessionRun");
 const Study = require("../models/Study");
-const TaskRun = require("../models/TaskRun");
+const AssessmentRun = require("../models/AssessmentRun");
 const Participant = require("../models/Participant");
 
 const completeTask = async (req, res) => {
@@ -42,7 +42,7 @@ const completeTask = async (req, res) => {
       status: "active",
     });
 
-    const taskRun = await TaskRun.create({
+    const taskRun = await AssessmentRun.create({
       participantId: sessionRun.participantId,
       sessionRunId: sessionRun._id,
       studyId: sessionRun.studyId,

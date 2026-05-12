@@ -2,7 +2,7 @@ const express = require("express");
 
 const {
   completeTask,
-} = require("../controllers/task.controller");
+} = require("../controllers/assessment.controller");
 
 const router = express.Router();
 

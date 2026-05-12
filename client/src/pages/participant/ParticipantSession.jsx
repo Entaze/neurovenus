@@ -5,7 +5,7 @@ import api from "../../api/client";
 import AppShell from "../../components/AppShell";
 import LoadingScreen from "../../components/LoadingScreen";
 import StatusCard from "../../components/StatusCard";
-import TaskRenderer from "../../tasks/TaskRenderer";
+import AssessmentRenderer from "../../assessments/AssessmentRenderer";
 
 export default function ParticipantSession() {
   const navigate = useNavigate();
@@ -77,7 +77,7 @@ export default function ParticipantSession() {
 
   return (
     <AppShell>
-      <TaskRenderer
+      <AssessmentRenderer
         task={state.data.task}
         sessionRun={state.data.sessionRun}
         taskIndex={state.data.taskIndex}

@@ -1,7 +1,7 @@
 const Study = require("../models/Study");
 const Participant = require("../models/Participant");
 const SessionRun = require("../models/SessionRun");
-const TaskRun = require("../models/TaskRun");
+const AssessmentRun = require("../models/AssessmentRun");
 
 const flattenSummary = (summary = {}) => {
   const flattened = {};
@@ -131,7 +131,7 @@ const exportStudyData = async (req, res) => {
       taskQuery.taskVersion = taskVersion;
     }
 
-    const taskRuns = await TaskRun.find(taskQuery)
+    const taskRuns = await AssessmentRun.find(taskQuery)
       .sort({ completedAt: 1 })
       .lean();
 

@@ -10,7 +10,7 @@ const { startReminderScheduler } = require("./utils/reminderScheduler");
 const studyRoutes = require("./routes/study.routes");
 const participantRoutes = require("./routes/participant.routes");
 const sessionRoutes = require("./routes/session.routes");
-const taskRoutes = require("./routes/task.routes");
+const assessmentRoutes = require("./routes/assessment.routes");
 const exportRoutes = require("./routes/export.routes");
 const authRoutes = require("./routes/auth.routes");
 
@@ -64,7 +64,7 @@ app.use(express.json());
 app.use("/api/studies", studyRoutes);
 app.use("/api/participants", participantRoutes);
 app.use("/api/sessions", sessionRoutes);
-app.use("/api/tasks", taskRoutes);
+app.use("/api/tasks", assessmentRoutes);
 app.use("/api", exportRoutes);
 app.use("/api/auth", authRoutes);
 

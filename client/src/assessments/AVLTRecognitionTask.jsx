@@ -1,4 +1,4 @@
-// client/src/tasks/AVLTRecognitionTask.jsx
+// client/src/assessments/AVLTRecognitionTask.jsx
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 

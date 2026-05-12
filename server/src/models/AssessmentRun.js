@@ -70,4 +70,4 @@ const taskRunSchema = new mongoose.Schema(
   }
 );
 
-module.exports = mongoose.model("TaskRun", taskRunSchema);
+module.exports = mongoose.model("AssessmentRun", taskRunSchema);

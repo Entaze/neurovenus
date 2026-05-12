@@ -7,7 +7,7 @@ import NBackTask from "./NBackTask";
 import StatusCard from "../components/StatusCard";
 import PrimaryButton from "../components/PrimaryButton";
 
-export default function TaskRenderer({
+export default function AssessmentRenderer({
   task,
   sessionRun,
   taskIndex,

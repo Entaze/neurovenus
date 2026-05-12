@@ -1,4 +1,4 @@
-// client/src/tasks/NBackTask.jsx
+// client/src/assessments/NBackTask.jsx
 
 import {
   useCallback,

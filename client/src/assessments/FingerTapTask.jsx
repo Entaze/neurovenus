@@ -1,4 +1,4 @@
-// client/src/tasks/FingerTapTask.jsx
+// client/src/assessments/FingerTapTask.jsx
 
 import {
   useCallback,
