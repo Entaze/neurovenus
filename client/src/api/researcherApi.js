@@ -30,11 +30,60 @@ export const researcherApi = {
     return data;
   },
 
-  getStudyExportUrl(studyId) {
-    return `${api.defaults.baseURL}/studies/${studyId}/export?format=csv`;
+  /**
+   * Build export URL with optional filters.
+   *
+   * Supported filters:
+   * - participantId
+   * - participantCode
+   * - sessionOrder
+   * - taskType
+   * - taskVersion
+   */
+  getStudyExportUrl(studyId, filters = {}) {
+    if (!studyId) return "";
+
+    const params = new URLSearchParams({
+      format: "csv",
+    });
+
+    Object.entries(filters).forEach(([key, value]) => {
+      if (
+        value !== null &&
+        value !== undefined &&
+        value !== ""
+      ) {
+        params.append(key, value);
+      }
+    });
+
+    return `${api.defaults.baseURL}/studies/${studyId}/export?${params.toString()}`;
   },
 
+  /**
+   * Convenience wrapper for participant export.
+   */
   getParticipantExportUrl(studyId, participantId) {
-    return `${api.defaults.baseURL}/studies/${studyId}/export?format=csv&participantId=${participantId}`;
+    return this.getStudyExportUrl(studyId, {
+      participantId,
+    });
+  },
+
+  /**
+   * Convenience wrapper for session export.
+   */
+  getSessionExportUrl(studyId, sessionOrder) {
+    return this.getStudyExportUrl(studyId, {
+      sessionOrder,
+    });
+  },
+
+  /**
+   * Convenience wrapper for assessment export.
+   */
+  getAssessmentExportUrl(studyId, taskType) {
+    return this.getStudyExportUrl(studyId, {
+      taskType,
+    });
   },
 };

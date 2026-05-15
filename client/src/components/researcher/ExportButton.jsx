@@ -1,16 +1,33 @@
 // src/components/researcher/ExportButton.jsx
 
 export default function ExportButton({
+  href = "",
   onClick,
   loading = false,
   label = "Export CSV",
   disabled = false,
 }) {
-  const isDisabled = loading || disabled;
+  const isDisabled = loading || disabled || (!href && !onClick);
+
+  const handleClick = () => {
+    if (isDisabled) return;
+
+    // Custom click handler takes precedence.
+    if (onClick) {
+      onClick();
+      return;
+    }
+
+    // Otherwise open export URL in a new tab.
+    if (href) {
+      window.open(href, "_blank", "noopener,noreferrer");
+    }
+  };
 
   return (
     <button
-      onClick={onClick}
+      type="button"
+      onClick={handleClick}
       disabled={isDisabled}
       style={{
         ...styles.button,
@@ -32,6 +49,7 @@ const styles = {
     fontWeight: 700,
     fontSize: 14,
     cursor: "pointer",
+    transition: "all 0.2s ease",
   },
 
   disabled: {
