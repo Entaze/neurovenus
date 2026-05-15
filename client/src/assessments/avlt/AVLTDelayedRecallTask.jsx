@@ -1,10 +1,10 @@
 // client/src/assessments/AVLTDelayedRecallTask.jsx
 
-import { useMemo, useState } from "react";
-import api from "../api/client";
-import PrimaryButton from "../components/PrimaryButton";
-import StatusCard from "../components/StatusCard";
-import { getProtocol } from "../config/protocols";
+import { useMemo, useRef, useState } from "react";
+import api from "../../api/client";
+import PrimaryButton from "../../components/PrimaryButton";
+import StatusCard from "../../components/StatusCard";
+import { getProtocol } from "../../config/protocols";
 
 export default function AVLTDelayedRecallTask({
   task,
@@ -14,6 +14,8 @@ export default function AVLTDelayedRecallTask({
 }) {
   const [recallText, setRecallText] = useState("");
   const [submitting, setSubmitting] = useState(false);
+
+  const startedAtRef = useRef(new Date().toISOString());
 
   // Resolve the correct protocol version for this study.
   // Falls back to v2 if not provided.
@@ -64,6 +66,7 @@ export default function AVLTDelayedRecallTask({
         sessionRunId: sessionRun._id,
         taskType: task.type,
         taskVersion: task.version,
+        startedAt: startedAtRef.current,
         summary: {
           totalCorrect: result.totalCorrect,
           totalTrials: result.totalTrials,

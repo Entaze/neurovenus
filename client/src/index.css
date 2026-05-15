@@ -21,27 +21,22 @@ html,
 body,
 #root {
   width: 100%;
+  max-width: 100%;
   min-width: 320px;
   min-height: 100vh;
   margin: 0;
   padding: 0;
+  overflow-x: hidden;
 }
 
 body {
-  overflow-x: hidden;
-  background:
-    radial-gradient(
-      circle at 18% 52%,
-      rgba(14, 165, 233, 0.12),
-      transparent 36%
-    ),
-    linear-gradient(
-      135deg,
-      #020617 0%,
-      #041127 38%,
-      #030b1d 68%,
-      #0b0820 100%
-    );
+  background: linear-gradient(
+    135deg,
+    #020617 0%,
+    #041127 38%,
+    #030b1d 68%,
+    #0b0820 100%
+  );
   color: #ffffff;
 }
 
@@ -65,4 +60,92 @@ img,
 svg {
   display: block;
   max-width: 100%;
+}
+
+/* Prevent common overflow issues */
+input,
+textarea,
+select,
+button {
+  max-width: 100%;
+}
+
+textarea {
+  resize: vertical;
+}
+
+.topbar-icon-button {
+  position: relative;
+  width: 36px;
+  height: 36px;
+  border-radius: 999px;
+  border: none;
+  background: transparent;
+  color: #94a3b8;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.topbar-icon-button:hover {
+  background: rgba(255, 255, 255, 0.06);
+  color: #e2e8f0;
+}
+
+.topbar-tooltip {
+  position: absolute;
+  top: calc(100% + 12px);
+  left: 50%;
+  transform: translateX(-50%) translateY(-4px);
+  background: #042334;
+  color: #e2e8f0;
+  padding: 10px 16px;
+  border-radius: 14px;
+  font-size: 13px;
+  font-weight: 500;
+  white-space: nowrap;
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transition: all 0.18s ease;
+  z-index: 1000;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.35);
+  border: 1px solid rgba(14, 165, 233, 0.18);
+}
+
+.topbar-icon-button:hover .topbar-tooltip {
+  opacity: 1;
+  visibility: visible;
+  transform: translateX(-50%) translateY(0);
+}
+
+.topbar-icon-button:hover::after {
+  content: "";
+  position: absolute;
+  top: calc(100% + 6px);
+  left: 50%;
+  transform: translateX(-50%) rotate(45deg);
+  width: 12px;
+  height: 12px;
+  background: #042334;
+  border-left: 1px solid rgba(14, 165, 233, 0.18);
+  border-top: 1px solid rgba(14, 165, 233, 0.18);
+  z-index: 999;
+}
+
+/* Hide vertical scrollbar but keep scrolling functional */
+
+html,
+body,
+#root {
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none; /* IE + Edge */
+}
+
+html::-webkit-scrollbar,
+body::-webkit-scrollbar,
+#root::-webkit-scrollbar {
+  display: none; /* Chrome, Safari */
 }

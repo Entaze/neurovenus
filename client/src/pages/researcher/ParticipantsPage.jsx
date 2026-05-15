@@ -35,22 +35,47 @@ const getAssessmentLabel = (assessment) => {
   return assessmentNameMap[key] || assessment?.name || key || "Assessment";
 };
 
-const getSessionDelayLabel = (session) => {
-  const offsetDays = Number(session?.offsetDays || 0);
+const formatDelayValue = (value, unit) => {
+  const number = Number(value || 0);
 
-  if (offsetDays > 0) {
-    return `Opens after ${offsetDays} day${offsetDays === 1 ? "" : "s"}`;
+  if (number <= 0) return null;
+
+  const clean = Number.isInteger(number) ? number : Number(number.toFixed(2));
+
+  return `Opens after ${clean} ${unit}${clean === 1 ? "" : "s"}`;
+};
+
+const getSessionDelayLabel = (session) => {
+  const delayValue = Number(session?.delayValue || 0);
+  const delayUnit = String(session?.delayUnit || "").toLowerCase();
+
+  if (delayValue > 0 && delayUnit) {
+    if (delayUnit.startsWith("minute")) return formatDelayValue(delayValue, "minute");
+    if (delayUnit.startsWith("hour")) return formatDelayValue(delayValue, "hour");
+    if (delayUnit.startsWith("day")) return formatDelayValue(delayValue, "day");
+  }
+
+  const unlockMinutes = Number(session?.unlockAfterMinutes || 0);
+
+  if (unlockMinutes > 0) {
+    return formatDelayValue(unlockMinutes, "minute");
   }
 
   const unlockHours = Number(session?.unlockAfterHours || 0);
 
   if (unlockHours > 0) {
-    if (unlockHours % 24 === 0) {
-      const days = unlockHours / 24;
-      return `Opens after ${days} day${days === 1 ? "" : "s"}`;
-    }
+    if (unlockHours < 1) return formatDelayValue(unlockHours * 60, "minute");
+    if (unlockHours % 24 === 0) return formatDelayValue(unlockHours / 24, "day");
 
-    return `Opens after ${unlockHours} hour${unlockHours === 1 ? "" : "s"}`;
+    return formatDelayValue(unlockHours, "hour");
+  }
+
+  const offsetDays = Number(session?.offsetDays || 0);
+
+  if (offsetDays > 0) {
+    if (offsetDays < 1) return formatDelayValue(offsetDays * 24 * 60, "minute");
+
+    return formatDelayValue(offsetDays, "day");
   }
 
   return "Available immediately";
@@ -108,16 +133,34 @@ export default function ParticipantsPage() {
         const data = await researcherApi.getStudies();
         const studyList = Array.isArray(data) ? data : data.studies || [];
 
-        if (!ignore) {
-          setStudies(studyList);
+        if (ignore) return;
 
-          if (!selectedStudyId && studyList.length > 0) {
-            setSelectedStudyId(studyList[0]._id);
+        setStudies(studyList);
+
+        const validStudyIds = studyList.map((study) => study._id);
+
+        if (!selectedStudyId || !validStudyIds.includes(selectedStudyId)) {
+          const firstStudyId = studyList[0]?._id || "";
+
+          setSelectedStudyId(firstStudyId);
+
+          if (firstStudyId) {
+            localStorage.setItem("selectedStudyId", firstStudyId);
+          } else {
+            localStorage.removeItem("selectedStudyId");
           }
         }
       } catch (err) {
         if (!ignore) {
-          setError(err?.message || "Failed to load studies.");
+          setError(
+            err?.response?.data?.message ||
+              err?.message ||
+              "Failed to load studies."
+          );
+          setStudies([]);
+          setSelectedStudyId("");
+          setParticipants([]);
+          localStorage.removeItem("selectedStudyId");
         }
       } finally {
         if (!ignore) {
@@ -131,11 +174,17 @@ export default function ParticipantsPage() {
     return () => {
       ignore = true;
     };
+    // We intentionally only run this on mount.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   useEffect(() => {
-    if (!selectedStudyId) return;
+    if (!selectedStudyId || !selectedStudy) {
+      queueMicrotask(() => {
+        setParticipants([]);
+      });
+      return;
+    }
 
     let ignore = false;
 
@@ -156,7 +205,11 @@ export default function ParticipantsPage() {
         }
       } catch (err) {
         if (!ignore) {
-          setError(err?.message || "Failed to load participants.");
+          setError(
+            err?.response?.data?.message ||
+              err?.message ||
+              "Failed to load participants."
+          );
           setParticipants([]);
         }
       } finally {
@@ -171,7 +224,19 @@ export default function ParticipantsPage() {
     return () => {
       ignore = true;
     };
-  }, [selectedStudyId]);
+  }, [selectedStudyId, selectedStudy]);
+
+  const handleStudyChange = (studyId) => {
+    setSelectedStudyId(studyId);
+    setParticipants([]);
+    setSearchTerm("");
+
+    if (studyId) {
+      localStorage.setItem("selectedStudyId", studyId);
+    } else {
+      localStorage.removeItem("selectedStudyId");
+    }
+  };
 
   const handleInvite = async ({ email, studyId }) => {
     try {
@@ -188,7 +253,11 @@ export default function ParticipantsPage() {
       setParticipants(participantList);
       setSearchTerm("");
     } catch (err) {
-      setError(err?.message || "Failed to invite participant.");
+      setError(
+        err?.response?.data?.message ||
+          err?.message ||
+          "Failed to invite participant."
+      );
       throw err;
     } finally {
       setInviteLoading(false);
@@ -217,7 +286,6 @@ export default function ParticipantsPage() {
         <div style={styles.studyHeader}>
           <div>
             <h2 style={styles.sectionTitle}>Selected Study</h2>
-            <p style={styles.eyebrow}>Active study</p>
           </div>
 
           {selectedStudy && (
@@ -228,12 +296,29 @@ export default function ParticipantsPage() {
           )}
         </div>
 
-        <StudySelector
-          studies={studies}
-          selectedStudyId={selectedStudyId}
-          onChange={setSelectedStudyId}
-          loading={studiesLoading}
-        />
+        {!studiesLoading && studies.length === 0 ? (
+          <div style={styles.emptyState}>
+            <p style={styles.emptyTitle}>No studies yet</p>
+            <p style={styles.emptySubtitle}>
+              Create your first study protocol to begin inviting participants and
+              collecting data.
+            </p>
+            <button
+              type="button"
+              style={styles.primaryButton}
+              onClick={() => (window.location.href = "/researcher/studies/new")}
+            >
+              Create First Study
+            </button>
+          </div>
+        ) : (
+          <StudySelector
+            studies={studies}
+            selectedStudyId={selectedStudyId}
+            onChange={handleStudyChange}
+            loading={studiesLoading}
+          />
+        )}
 
         {selectedStudy && (
           <>
@@ -282,6 +367,7 @@ export default function ParticipantsPage() {
       <InviteParticipantModal
         studyId={selectedStudyId}
         loading={inviteLoading}
+        disabled={!selectedStudy}
         onInvite={handleInvite}
       />
 
@@ -463,5 +549,41 @@ const styles = {
     color: "#94a3b8",
     fontSize: 13,
     lineHeight: 1.5,
+  },
+
+  emptyState: {
+    padding: "36px 24px",
+    borderRadius: 16,
+    border: "1px dashed rgba(255,255,255,0.08)",
+    background: "rgba(255,255,255,0.02)",
+    textAlign: "center",
+  },
+
+  emptyTitle: {
+    margin: 0,
+    fontSize: 24,
+    fontWeight: 700,
+    color: "#ffffff",
+  },
+
+  emptySubtitle: {
+    marginTop: 10,
+    marginBottom: 20,
+    color: "#94a3b8",
+    fontSize: 14,
+    lineHeight: 1.7,
+    maxWidth: 560,
+    marginInline: "auto",
+  },
+
+  primaryButton: {
+    border: "none",
+    borderRadius: 12,
+    padding: "12px 18px",
+    background: "#2f4b88",
+    color: "#ffffff",
+    fontWeight: 700,
+    fontSize: 14,
+    cursor: "pointer",
   },
 };

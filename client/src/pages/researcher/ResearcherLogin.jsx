@@ -1,9 +1,21 @@
+// src/pages/researcher/ResearcherLogin.jsx
+
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Mail, Lock, Eye, EyeOff, ShieldCheck, Users, Activity, Download } from "lucide-react";
+import {
+  Mail,
+  Lock,
+  Eye,
+  EyeOff,
+  ShieldCheck,
+  Users,
+  Activity,
+  Download,
+} from "lucide-react";
 
 import api from "../../api/client";
 import { useResearcherAuth } from "../../hooks/useResearcherAuth";
+import useViewport from "../../hooks/useViewport";
 
 export default function ResearcherLogin() {
   const navigate = useNavigate();
@@ -12,9 +24,11 @@ export default function ResearcherLogin() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
-  const [rememberMe, setRememberMe] = useState(false);
+  const [rememberMe, setRememberMe] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
+
+  const { isMobile, isTablet, isShortScreen } = useViewport();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -47,61 +61,113 @@ export default function ResearcherLogin() {
   };
 
   return (
-    <main style={styles.page}>
-      <div style={styles.glowOne} />
-      <div style={styles.glowTwo} />
+    <main
+      style={{
+        ...styles.page,
+        padding: isMobile
+          ? "28px 20px"
+          : isShortScreen
+          ? "24px 32px"
+          : "48px 32px 32px",
+      }}
+    >
       <div style={styles.gridOverlay} />
 
-      <section style={styles.shell}>
+      <section
+        style={{
+          ...styles.shell,
+          gridTemplateColumns: isMobile
+            ? "1fr"
+            : isTablet
+            ? "minmax(0, 1fr) 400px"
+            : "minmax(0, 700px) 420px",
+          gap: isMobile ? 36 : isShortScreen ? 56 : 96,
+          alignItems: isShortScreen ? "start" : "center",
+        }}
+      >
         <div style={styles.hero}>
-          <div style={styles.logoRow}>
+          <div
+            style={{
+              ...styles.logoRow,
+              marginBottom: isShortScreen ? 28 : 48,
+            }}
+          >
             <img
               src="/neurovenus-icon.svg"
               alt="Neurovenus icon"
               style={styles.logoIcon}
             />
-
             <span style={styles.logoText}>NEUROVENUS</span>
           </div>
 
           <div style={styles.badge}>Researcher Portal</div>
 
-          <h1 style={styles.heroTitle}>
+          <h1
+            style={{
+              ...styles.heroTitle,
+              fontSize: isMobile
+                ? 44
+                : isTablet
+                ? 56
+                : isShortScreen
+                ? 58
+                : 72,
+            }}
+          >
             Research-grade cognitive testing,{" "}
             <span style={styles.gradientText}>delivered remotely.</span>
           </h1>
 
-          <p style={styles.heroText}>
+          <p
+            style={{
+              ...styles.heroText,
+              fontSize: isShortScreen ? 16 : 18,
+              marginTop: isShortScreen ? 20 : 28,
+            }}
+          >
             Build and run remote cognitive and sleep studies. Invite participants,
             monitor sessions, collect high-quality data, and export analysis-ready
             datasets from one secure platform.
           </p>
 
-          <div style={styles.featuresGrid}>
-            <Feature
-              icon={<ShieldCheck size={26} />}
-              title="Secure by design"
-              text="Protected researcher access and secure participant links."
-            />
-            <Feature
-              icon={<Users size={26} />}
-              title="Flexible studies"
-              text="Configure sessions, assessments, schedules, and reminders."
-            />
-            <Feature
-              icon={<Activity size={26} />}
-              title="Progress tracking"
-              text="Monitor participant completion and session activity."
-            />
-            <Feature
-              icon={<Download size={26} />}
-              title="Clean exports"
-              text="Export structured datasets for downstream analysis."
-            />
-          </div>
+          {!isMobile && (
+            <div
+              style={{
+                ...styles.featuresGrid,
+                marginTop: isShortScreen ? 30 : 46,
+              }}
+            >
+              <Feature
+                icon={<ShieldCheck size={22} strokeWidth={1.75} />}
+                title="Secure by design"
+                text="Protected researcher access and secure participant links."
+              />
+              <Feature
+                icon={<Users size={22} strokeWidth={1.75} />}
+                title="Flexible studies"
+                text="Configure sessions, assessments, schedules, and reminders."
+              />
+              <Feature
+                icon={<Activity size={22} strokeWidth={1.75} />}
+                title="Progress tracking"
+                text="Monitor participant completion and session activity."
+              />
+              <Feature
+                icon={<Download size={22} strokeWidth={1.75} />}
+                title="Clean exports"
+                text="Export structured datasets for downstream analysis."
+              />
+            </div>
+          )}
         </div>
 
-        <form onSubmit={handleSubmit} style={styles.card}>
+        <form
+          onSubmit={handleSubmit}
+          style={{
+            ...styles.card,
+            padding: isShortScreen ? "30px 32px" : "40px 36px",
+          }}
+        >
           <p style={styles.kicker}>Researcher Portal</p>
           <h2 style={styles.title}>Welcome back</h2>
           <p style={styles.subtitle}>Sign in to your Neurovenus account.</p>
@@ -140,7 +206,6 @@ export default function ResearcherLogin() {
                 onClick={() => setShowPassword((value) => !value)}
                 style={styles.eyeButton}
                 disabled={submitting}
-                aria-label={showPassword ? "Hide password" : "Show password"}
               >
                 {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
               </button>
@@ -195,7 +260,9 @@ export default function ResearcherLogin() {
 
           <p style={styles.helpText}>
             Need access?{" "}
-            <span style={styles.helpLink}>Contact your study administrator.</span>
+            <span style={styles.helpLink}>
+              Contact your study administrator.
+            </span>
           </p>
         </form>
       </section>
@@ -225,33 +292,24 @@ const styles = {
   page: {
     position: "relative",
     minHeight: "100vh",
-    overflow: "hidden",
+    overflowY: "auto",
     display: "flex",
-    alignItems: "center",
+    flexDirection: "column",
     justifyContent: "center",
-    padding: "32px 56px 72px",
     background:
-      "linear-gradient(135deg, #020617 0%, #041127 38%, #030b1d 68%, #0b0820 100%)",
+      "linear-gradient(135deg, #020617 0%, #041127 45%, #030b1d 100%)",
     color: "#ffffff",
     boxSizing: "border-box",
     fontFamily:
       "Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
   },
 
-  glowOne: {
-    display: "none",
-  },
-
-  glowTwo: {
-    display: "none",
-  },
-
   gridOverlay: {
     position: "absolute",
     inset: 0,
     backgroundImage: `
-      linear-gradient(rgba(255,255,255,0.022) 1px, transparent 1px),
-      linear-gradient(90deg, rgba(255,255,255,0.022) 1px, transparent 1px)
+      linear-gradient(rgba(255,255,255,0.018) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255,255,255,0.018) 1px, transparent 1px)
     `,
     backgroundSize: "64px 64px",
     opacity: 0.42,
@@ -264,11 +322,8 @@ const styles = {
     width: "100%",
     maxWidth: 1280,
     display: "grid",
-    gridTemplateColumns: "minmax(0, 700px) 420px",
-    alignItems: "center",
     justifyContent: "center",
-    gap: 110,
-    marginTop: "-56px",
+    margin: "0 auto",
   },
 
   hero: {
@@ -279,18 +334,17 @@ const styles = {
     display: "flex",
     alignItems: "center",
     gap: 12,
-    marginBottom: 56,
   },
 
   logoIcon: {
-    width: 34,
-    height: 34,
+    width: 30,
+    height: 30,
     display: "block",
     flexShrink: 0,
   },
 
   logoText: {
-    fontSize: 17,
+    fontSize: 16,
     fontWeight: 900,
     letterSpacing: "0.34em",
     color: "#ffffff",
@@ -300,7 +354,7 @@ const styles = {
     display: "inline-flex",
     alignItems: "center",
     padding: "9px 16px",
-    marginBottom: 28,
+    marginBottom: 24,
     borderRadius: 999,
     background: "rgba(15,23,42,0.45)",
     border: "1px solid rgba(148,163,184,0.18)",
@@ -314,15 +368,13 @@ const styles = {
   heroTitle: {
     margin: 0,
     maxWidth: 700,
-    fontSize: "clamp(64px, 4.8vw, 76px)",
-    lineHeight: 1.02,
+    lineHeight: 1.03,
     letterSpacing: "-0.065em",
     fontWeight: 950,
     color: "#ffffff",
   },
 
   gradientText: {
-    display: "inline",
     background:
       "linear-gradient(90deg, #38bdf8 0%, #4f8cff 45%, #a855f7 100%)",
     WebkitBackgroundClip: "text",
@@ -332,32 +384,29 @@ const styles = {
   },
 
   heroText: {
-    margin: "28px 0 0",
     maxWidth: 620,
     color: "#d4deeb",
-    fontSize: 18,
-    lineHeight: 1.9,
+    lineHeight: 1.75,
   },
 
   featuresGrid: {
-    marginTop: 48,
     display: "grid",
     gridTemplateColumns: "repeat(2, minmax(0, 1fr))",
-    columnGap: 56,
-    rowGap: 28,
+    columnGap: 48,
+    rowGap: 24,
     maxWidth: 650,
   },
 
   feature: {
     display: "grid",
-    gridTemplateColumns: "34px 1fr",
-    gap: 16,
+    gridTemplateColumns: "30px 1fr",
+    gap: 14,
     alignItems: "flex-start",
   },
 
   featureIcon: {
-    width: 34,
-    height: 34,
+    width: 30,
+    height: 30,
     display: "grid",
     placeItems: "center",
     color: "#38bdf8",
@@ -365,7 +414,7 @@ const styles = {
 
   featureTitle: {
     margin: "0 0 8px",
-    fontSize: 14,
+    fontSize: 13,
     fontWeight: 900,
     letterSpacing: "0.18em",
     textTransform: "uppercase",
@@ -375,20 +424,16 @@ const styles = {
   featureText: {
     margin: 0,
     color: "#b8c4d6",
-    fontSize: 15,
-    lineHeight: 1.7,
+    fontSize: 14,
+    lineHeight: 1.65,
   },
 
   card: {
     width: "100%",
-    padding: "40px 36px",
-    borderRadius: 28,
+    borderRadius: 24,
     background: "rgba(7,13,31,0.74)",
     border: "1px solid rgba(148,163,184,0.24)",
-    boxShadow:
-      "0 30px 100px rgba(0,0,0,0.45), inset 0 1px 0 rgba(255,255,255,0.05)",
-    backdropFilter: "blur(22px)",
-    WebkitBackdropFilter: "blur(22px)",
+    boxShadow: "0 24px 80px rgba(0,0,0,0.35)",
     boxSizing: "border-box",
   },
 
@@ -403,14 +448,14 @@ const styles = {
 
   title: {
     margin: "14px 0 8px",
-    fontSize: 34,
+    fontSize: 32,
     fontWeight: 950,
     letterSpacing: "-0.06em",
     color: "#ffffff",
   },
 
   subtitle: {
-    margin: "0 0 28px",
+    margin: "0 0 26px",
     color: "#c3ccda",
     fontSize: 14,
     lineHeight: 1.6,
@@ -420,7 +465,7 @@ const styles = {
     display: "flex",
     flexDirection: "column",
     gap: 8,
-    marginBottom: 18,
+    marginBottom: 16,
   },
 
   label: {
@@ -443,7 +488,7 @@ const styles = {
 
   input: {
     width: "100%",
-    height: 50,
+    height: 48,
     padding: "0 48px",
     borderRadius: 12,
     border: "1px solid rgba(59,130,246,0.45)",
@@ -472,7 +517,7 @@ const styles = {
     justifyContent: "space-between",
     alignItems: "center",
     gap: 16,
-    margin: "2px 0 22px",
+    margin: "2px 0 18px",
   },
 
   rememberRow: {
@@ -501,32 +546,27 @@ const styles = {
 
   error: {
     height: 20,
-    margin: "0 0 16px",
+    margin: "0 0 14px",
     color: "#fca5a5",
     fontSize: 14,
-    fontWeight: 800,
     lineHeight: "20px",
   },
 
   button: {
     width: "100%",
-    height: 52,
+    height: 50,
     borderRadius: 12,
     border: "none",
     cursor: "pointer",
-    background:
-      "linear-gradient(90deg, #2ea8ff 0%, #4d7cff 52%, #8b2cf5 100%)",
+    background: "#2563eb",
     color: "#ffffff",
-    fontWeight: 900,
+    fontWeight: 800,
     fontSize: 14,
-    boxShadow: "0 8px 24px rgba(79,124,255,0.22)",
-    transition: "all 0.25s ease",
   },
 
   buttonDisabled: {
     opacity: 0.6,
     cursor: "not-allowed",
-    boxShadow: "none",
   },
 
   divider: {
@@ -534,7 +574,7 @@ const styles = {
     gridTemplateColumns: "1fr auto 1fr",
     alignItems: "center",
     gap: 16,
-    margin: "24px 0",
+    margin: "22px 0",
   },
 
   dividerLine: {
@@ -549,7 +589,7 @@ const styles = {
 
   secondaryButton: {
     width: "100%",
-    height: 52,
+    height: 50,
     borderRadius: 12,
     border: "1px solid rgba(148,163,184,0.28)",
     background: "rgba(15,23,42,0.25)",
@@ -560,7 +600,7 @@ const styles = {
   },
 
   helpText: {
-    margin: "26px 0 0",
+    margin: "24px 0 0",
     textAlign: "center",
     color: "#9aa7bb",
     fontSize: 13,
@@ -572,15 +612,14 @@ const styles = {
   },
 
   footer: {
-    position: "absolute",
-    left: 0,
-    right: 0,
-    bottom: 24,
+    position: "relative",
     zIndex: 1,
+    marginTop: 28,
     display: "flex",
     justifyContent: "center",
     gap: 32,
     color: "#7f8ca3",
     fontSize: 12,
+    flexWrap: "wrap",
   },
 };

@@ -3,21 +3,34 @@ import { ResearcherAuthContext } from "./ResearcherAuthContextValue";
 
 export function ResearcherAuthProvider({ children }) {
   const [researcher, setResearcher] = useState(() => {
-    const saved = localStorage.getItem("cv_user");
+    const saved =
+      localStorage.getItem("researcherUser") ||
+      localStorage.getItem("cv_user");
+
     return saved ? JSON.parse(saved) : null;
   });
 
   const login = ({ token, user }) => {
-    localStorage.setItem("cv_token", token);
-    localStorage.setItem("cv_user", JSON.stringify(user));
+    localStorage.setItem("researcherToken", token);
+    localStorage.setItem("researcherUser", JSON.stringify(user));
+
+    // Clean old keys
+    localStorage.removeItem("cv_token");
+    localStorage.removeItem("cv_user");
+    localStorage.removeItem("researcherAuth");
+
     setResearcher(user);
     return user;
   };
 
   const logout = () => {
+    localStorage.removeItem("researcherToken");
+    localStorage.removeItem("researcherUser");
+
     localStorage.removeItem("cv_token");
     localStorage.removeItem("cv_user");
     localStorage.removeItem("researcherAuth");
+
     setResearcher(null);
   };
 

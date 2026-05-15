@@ -1,4 +1,5 @@
 // src/components/researcher/StudySelector.jsx
+import { ChevronDown } from "lucide-react";
 
 export default function StudySelector({
   studies = [],
@@ -8,8 +9,7 @@ export default function StudySelector({
 }) {
   return (
     <div style={styles.wrapper}>
-      <label style={styles.label}>Active Study</label>
-
+      <div style={styles.selectWrap}>
       <select
         value={selectedStudyId}
         onChange={(e) => onChange?.(e.target.value)}
@@ -29,6 +29,9 @@ export default function StudySelector({
           </option>
         ))}
       </select>
+
+      <ChevronDown size={16} strokeWidth={1.75} style={styles.chevron} />
+      </div>
     </div>
   );
 }
@@ -49,14 +52,20 @@ const styles = {
     letterSpacing: 0.8,
   },
 
+  selectWrap: {
+    position: "relative",
+  },
+
   select: {
-    minWidth: 320,
-    maxWidth: 480,
-    padding: "12px 14px",
-    borderRadius: 10,
-    border: "1px solid rgba(255,255,255,0.12)",
+    width: "100%",
+    height: 40,
+    appearance: "none",
+    WebkitAppearance: "none",
+    padding: "0 48px 0 16px", // slightly more right padding
+    borderRadius: 12,
+    border: "1px solid rgba(148,163,184,0.18)",
     background: "rgba(255,255,255,0.04)",
-    color: "#ffffff",
+    color: "#e5eefb",
     fontSize: 14,
     outline: "none",
     cursor: "pointer",
@@ -65,5 +74,14 @@ const styles = {
   disabled: {
     opacity: 0.6,
     cursor: "not-allowed",
+  },
+
+  chevron: {
+    position: "absolute",
+    right: 20,
+    top: "50%",
+    transform: "translateY(-50%)",
+    pointerEvents: "none",
+    color: "#94a3b8",
   },
 };

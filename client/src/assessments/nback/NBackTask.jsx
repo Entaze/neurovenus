@@ -9,11 +9,11 @@ import {
 } from "react";
 import { useSearchParams } from "react-router-dom";
 
-import api from "../api/client";
-import PrimaryButton from "../components/PrimaryButton";
-import StatusCard from "../components/StatusCard";
-import { TASK_TIMING } from "../config/taskTiming";
-import { getProtocol } from "../config/protocols";
+import api from "../../api/client";
+import PrimaryButton from "../../components/PrimaryButton";
+import StatusCard from "../../components/StatusCard";
+import { TASK_TIMING } from "../../config/taskTiming";
+import { getProtocol } from "../../config/protocols";
 
 const FIXATION_MS = TASK_TIMING.nBack.fixationMs;
 const LETTER_MS = TASK_TIMING.nBack.letterMs;
@@ -69,6 +69,7 @@ export default function NBackTask({
   const respondedRef = useRef(false);
   const stimulusStartedAtRef = useRef(null);
   const responsesRef = useRef([]);
+  const taskStartedAtRef = useRef(null);
 
   const [phase, setPhase] = useState("intro");
   const [conditionIndex, setConditionIndex] = useState(0);
@@ -194,6 +195,7 @@ export default function NBackTask({
           sessionRunId: sessionRun._id,
           taskType: task.type,
           taskVersion: task.version,
+          startedAt: taskStartedAtRef.current,
           summary: {
             totalCorrect,
             totalTrials: realResponses.length,
@@ -379,7 +381,12 @@ export default function NBackTask({
         </div>
 
         <div className="mt-8">
-          <PrimaryButton onClick={() => setPhase("instructions")}>
+          <PrimaryButton
+            onClick={() => {
+              taskStartedAtRef.current = new Date().toISOString();
+              setPhase("instructions");
+            }}
+          >
             Continue
           </PrimaryButton>
         </div>

@@ -1,11 +1,11 @@
-// client/src/assessments/AVLTRecognitionTask.jsx
+// client/src/assessments/avlt/AVLTRecognitionTask.jsx
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
-import api from "../api/client";
-import PrimaryButton from "../components/PrimaryButton";
-import StatusCard from "../components/StatusCard";
-import { getProtocol } from "../config/protocols";
+import api from "../../api/client";
+import PrimaryButton from "../../components/PrimaryButton";
+import StatusCard from "../../components/StatusCard";
+import { getProtocol } from "../../config/protocols";
 
 const normalise = (word) => word.trim().toLowerCase();
 
@@ -20,9 +20,9 @@ export default function AVLTRecognitionTask({
   const [responses, setResponses] = useState([]);
   const [submitting, setSubmitting] = useState(false);
 
-  const startedAtRef = useRef(null);
+  const taskStartedAtRef = useRef(null);
+  const stimulusStartedAtRef = useRef(null);
 
-  // Resolve protocol version dynamically
   const protocol = useMemo(() => {
     const protocolVersion =
       sessionRun?.protocolVersion ||
@@ -33,18 +33,13 @@ export default function AVLTRecognitionTask({
     return getProtocol(protocolVersion);
   }, [sessionRun, task?.version]);
 
-  // Pull Version 2 word lists from the protocol config
   const originalWords = protocol.avlt.listA;
   const recognitionWords = protocol.avlt.recognitionWords;
-
   const currentWord = recognitionWords[wordIndex];
 
   const isOriginalWord = useCallback(
     (word) => {
-      const originalSet = new Set(
-        originalWords.map((w) => normalise(w))
-      );
-
+      const originalSet = new Set(originalWords.map((w) => normalise(w)));
       return originalSet.has(normalise(word));
     },
     [originalWords]
@@ -56,38 +51,29 @@ export default function AVLTRecognitionTask({
         setSubmitting(true);
         setPhase("submitting");
 
-        const totalCorrect = finalResponses.filter(
-          (r) => r.correct
-        ).length;
+        const totalCorrect = finalResponses.filter((r) => r.correct).length;
 
         const hits = finalResponses.filter(
-          (r) =>
-            r.expectedResponse === "y" &&
-            r.actualResponse === "y"
+          (r) => r.expectedResponse === "y" && r.actualResponse === "y"
         ).length;
 
         const falseAlarms = finalResponses.filter(
-          (r) =>
-            r.expectedResponse === "n" &&
-            r.actualResponse === "y"
+          (r) => r.expectedResponse === "n" && r.actualResponse === "y"
         ).length;
 
         const misses = finalResponses.filter(
-          (r) =>
-            r.expectedResponse === "y" &&
-            r.actualResponse === "n"
+          (r) => r.expectedResponse === "y" && r.actualResponse === "n"
         ).length;
 
         const correctRejections = finalResponses.filter(
-          (r) =>
-            r.expectedResponse === "n" &&
-            r.actualResponse === "n"
+          (r) => r.expectedResponse === "n" && r.actualResponse === "n"
         ).length;
 
         await api.post("/tasks/complete", {
           sessionRunId: sessionRun._id,
           taskType: task.type,
           taskVersion: task.version,
+          startedAt: taskStartedAtRef.current,
           summary: {
             totalCorrect,
             totalTrials: finalResponses.length,
@@ -112,10 +98,7 @@ export default function AVLTRecognitionTask({
 
         window.location.reload();
       } catch (error) {
-        console.error(
-          "Failed to submit recognition results:",
-          error
-        );
+        console.error("Failed to submit recognition results:", error);
 
         alert(
           error.response?.data?.message ||
@@ -135,14 +118,11 @@ export default function AVLTRecognitionTask({
       if (phase !== "recognition") return;
       if (!["y", "n"].includes(key)) return;
 
-      const expectedResponse = isOriginalWord(currentWord)
-        ? "y"
-        : "n";
-
+      const expectedResponse = isOriginalWord(currentWord) ? "y" : "n";
       const actualResponse = key;
 
-      const reactionTimeMs = startedAtRef.current
-        ? Date.now() - startedAtRef.current
+      const reactionTimeMs = stimulusStartedAtRef.current
+        ? Date.now() - stimulusStartedAtRef.current
         : null;
 
       const response = {
@@ -162,7 +142,7 @@ export default function AVLTRecognitionTask({
       }
 
       setWordIndex((prev) => prev + 1);
-      startedAtRef.current = Date.now();
+      stimulusStartedAtRef.current = Date.now();
     },
     [
       phase,
@@ -193,7 +173,8 @@ export default function AVLTRecognitionTask({
 
   const beginRecognition = () => {
     setPhase("recognition");
-    startedAtRef.current = Date.now();
+    taskStartedAtRef.current = new Date().toISOString();
+    stimulusStartedAtRef.current = Date.now();
   };
 
   if (phase === "instructions") {
@@ -206,19 +187,13 @@ export default function AVLTRecognitionTask({
           <p>You will now be shown words one at a time.</p>
 
           <p>
-            Press{" "}
-            <span className="font-semibold text-white">
-              Y
-            </span>{" "}
-            if the word was on the original list.
+            Press <span className="font-semibold text-white">Y</span> if the
+            word was on the original list.
           </p>
 
           <p>
-            Press{" "}
-            <span className="font-semibold text-white">
-              N
-            </span>{" "}
-            if the word was not on the original list.
+            Press <span className="font-semibold text-white">N</span> if the
+            word was not on the original list.
           </p>
 
           <p className="text-sm text-slate-400">

@@ -2,11 +2,11 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 
-import api from "../api/client";
-import PrimaryButton from "../components/PrimaryButton";
-import StatusCard from "../components/StatusCard";
-import { TASK_TIMING } from "../config/taskTiming";
-import { getProtocol } from "../config/protocols";
+import api from "../../api/client";
+import PrimaryButton from "../../components/PrimaryButton";
+import StatusCard from "../../components/StatusCard";
+import { TASK_TIMING } from "../../config/taskTiming";
+import { getProtocol } from "../../config/protocols";
 
 const WORD_DISPLAY_MS = TASK_TIMING.avlt.wordDisplayMs;
 const READY_DELAY_MS = TASK_TIMING.avlt.readyDelayMs;
@@ -14,6 +14,7 @@ const READY_DELAY_MS = TASK_TIMING.avlt.readyDelayMs;
 export default function AVLTTask({ task, sessionRun, taskIndex, totalTasks }) {
   const readyTimerRef = useRef(null);
   const allTrialsRef = useRef([]);
+  const taskStartedAtRef = useRef(null);
 
   const protocol = useMemo(() => {
     const protocolVersion =
@@ -89,6 +90,10 @@ export default function AVLTTask({ task, sessionRun, taskIndex, totalTasks }) {
   }, [phase, currentWordIndex, currentTrial]);
 
   const startTrial = () => {
+    if (!taskStartedAtRef.current) {
+      taskStartedAtRef.current = new Date().toISOString();
+    }
+
     setCurrentWordIndex(0);
     setRecallText("");
 
@@ -190,6 +195,7 @@ export default function AVLTTask({ task, sessionRun, taskIndex, totalTasks }) {
         sessionRunId: sessionRun._id,
         taskType: task.type,
         taskVersion: task.version,
+        startedAt: taskStartedAtRef.current,
         summary,
         trials,
       });

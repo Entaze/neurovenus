@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import SessionEditor from "./SessionEditor";
 
 const delayToTiming = (delayValue = 0, delayUnit = "days") => {
@@ -110,6 +110,9 @@ export default function ProtocolBuilder({ value, onChange }) {
     return [createDefaultSession(1)];
   });
 
+  const newSessionRef = useRef(null);
+  const shouldScrollToNewSession = useRef(false);
+
   const protocol = useMemo(
     () => ({
       type: "custom",
@@ -132,10 +135,27 @@ export default function ProtocolBuilder({ value, onChange }) {
   const updateSessions = (nextSessions) => {
     setSessions(nextSessions);
     emitChange(nextSessions);
+
+    requestAnimationFrame(() => {
+      if (
+        shouldScrollToNewSession.current &&
+        newSessionRef.current
+      ) {
+        newSessionRef.current.scrollIntoView({
+          behavior: "smooth",
+          block: "start",
+        });
+
+        shouldScrollToNewSession.current = false;
+      }
+    });
   };
 
   const addSession = () => {
     const nextOrder = sessions.length + 1;
+
+    shouldScrollToNewSession.current = true;
+
     updateSessions([...sessions, createDefaultSession(nextOrder)]);
   };
 
@@ -191,15 +211,27 @@ export default function ProtocolBuilder({ value, onChange }) {
       </div>
 
       <div style={styles.sessionList}>
-        {sessions.map((session, index) => (
-          <SessionEditor
-            key={`session-${index}`}
-            session={session}
-            sessionIndex={index}
-            onChange={(updatedSession) => updateSession(index, updatedSession)}
-            onRemoveSession={() => removeSession(index)}
-          />
-        ))}
+        {sessions.map((session, index) => {
+          const isLastSession = index === sessions.length - 1;
+
+          return (
+            <div
+              key={`session-${index}`}
+              ref={isLastSession ? newSessionRef : null}
+            >
+              <SessionEditor
+                session={session}
+                sessionIndex={index}
+                onChange={(updatedSession) =>
+                  updateSession(index, updatedSession)
+                }
+                onRemoveSession={
+                  index === 0 ? undefined : () => removeSession(index)
+                }
+              />
+            </div>
+          );
+        })}
       </div>
     </section>
   );
@@ -255,14 +287,15 @@ const styles = {
   },
 
   addButton: {
-    border: "1px solid rgba(56, 189, 248, 0.28)",
-    borderRadius: 14,
-    background: "linear-gradient(90deg, #0ea5e9, #4f46e5)",
+    border: "none",
+    borderRadius: 12,
+    padding: "12px 18px",
+    background: "#2f4b88",
     color: "#ffffff",
-    padding: "12px 16px",
+    fontWeight: 700,
     fontSize: 14,
-    fontWeight: 900,
     cursor: "pointer",
+    transition: "background 0.2s ease",
   },
 
   stats: {

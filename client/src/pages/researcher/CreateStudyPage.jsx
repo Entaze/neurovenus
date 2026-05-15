@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import { researcherApi } from "../../api/researcherApi";
 import ResearcherLayout from "../../components/researcher/ResearcherLayout";
 import ProtocolBuilder from "../../components/protocol/ProtocolBuilder";
@@ -10,7 +10,6 @@ export default function CreateStudyPage() {
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [protocol, setProtocol] = useState(null);
-
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
 
@@ -37,6 +36,18 @@ export default function CreateStudyPage() {
       return;
     }
 
+    // Ensure every session contains at least one assessment
+    const emptySessionIndex = protocol.sessions.findIndex(
+      (session) => !session.assessments || session.assessments.length === 0
+    );
+
+    if (emptySessionIndex !== -1) {
+      setError(
+        `Session ${emptySessionIndex + 1} has no assessments. Please add at least one assessment or remove the session.`
+      );
+      return;
+    }
+
     try {
       setSaving(true);
 
@@ -48,11 +59,7 @@ export default function CreateStudyPage() {
 
       const studyId = response?.study?._id;
 
-      if (studyId) {
-        navigate(`/researcher/studies/${studyId}`);
-      } else {
-        navigate("/researcher/dashboard");
-      }
+      navigate(studyId ? `/researcher/studies/${studyId}` : "/researcher/studies");
     } catch (err) {
       setError(
         err?.response?.data?.message ||
@@ -68,6 +75,14 @@ export default function CreateStudyPage() {
     <ResearcherLayout>
       <div style={styles.page}>
         <div style={styles.hero}>
+          <div style={styles.breadcrumb}>
+            <Link to="/researcher/studies" style={styles.breadcrumbLink}>
+              Studies
+            </Link>
+            <span style={styles.breadcrumbSeparator}>›</span>
+            <span style={styles.breadcrumbCurrent}>New Study</span>
+          </div>
+
           <p style={styles.kicker}>New Study</p>
           <h1 style={styles.title}>Create a study protocol</h1>
           <p style={styles.subtitle}>
@@ -106,22 +121,20 @@ export default function CreateStudyPage() {
             <ProtocolBuilder value={protocol} onChange={setProtocol} />
           </section>
 
-          {error ? <div style={styles.error}>{error}</div> : null}
+          <div style={styles.errorContainer}>
+            {error ? <div style={styles.error}>{error}</div> : null}
+          </div>
 
           <div style={styles.actions}>
             <button
               type="button"
-              onClick={() => navigate("/researcher/dashboard")}
+              onClick={() => navigate("/researcher/studies")}
               style={styles.secondaryButton}
             >
               Cancel
             </button>
 
-            <button
-              type="submit"
-              disabled={saving}
-              style={styles.primaryButton}
-            >
+            <button type="submit" disabled={saving} style={styles.primaryButton}>
               {saving ? "Creating Study..." : "Create Study"}
             </button>
           </div>
@@ -141,7 +154,31 @@ const styles = {
   hero: {
     display: "flex",
     flexDirection: "column",
+    gap: 10,
+  },
+
+  breadcrumb: {
+    display: "flex",
+    alignItems: "center",
     gap: 8,
+    marginBottom: 4,
+    fontSize: 12,
+    fontWeight: 850,
+    textTransform: "uppercase",
+    letterSpacing: "0.18em",
+  },
+
+  breadcrumbLink: {
+    color: "#38bdf8",
+    textDecoration: "none",
+  },
+
+  breadcrumbSeparator: {
+    color: "#64748b",
+  },
+
+  breadcrumbCurrent: {
+    color: "#94a3b8",
   },
 
   kicker: {
@@ -155,10 +192,9 @@ const styles = {
 
   title: {
     margin: 0,
+    fontSize: 32,
+    fontWeight: 800,
     color: "#ffffff",
-    fontSize: 42,
-    fontWeight: 950,
-    letterSpacing: "-0.05em",
   },
 
   subtitle: {
@@ -166,7 +202,7 @@ const styles = {
     maxWidth: 760,
     color: "#94a3b8",
     fontSize: 15,
-    lineHeight: 1.7,
+    lineHeight: 1.6,
   },
 
   form: {
@@ -176,10 +212,10 @@ const styles = {
   },
 
   card: {
-    padding: 28,
-    borderRadius: 28,
-    background: "rgba(7, 15, 35, 0.72)",
-    border: "1px solid rgba(148, 163, 184, 0.16)",
+    padding: 24,
+    borderRadius: 18,
+    background: "rgba(255,255,255,0.04)",
+    border: "1px solid rgba(255,255,255,0.08)",
   },
 
   sectionTitle: {
@@ -241,24 +277,28 @@ const styles = {
   },
 
   secondaryButton: {
-    border: "1px solid rgba(148, 163, 184, 0.18)",
-    borderRadius: 14,
-    background: "rgba(15, 23, 42, 0.7)",
-    color: "#e2e8f0",
-    padding: "12px 18px",
-    fontSize: 14,
-    fontWeight: 800,
+    borderRadius: 10,
+    padding: "10px 14px",
+    border: "1px solid rgba(255,255,255,0.08)",
+    background: "rgba(255,255,255,0.04)",
+    color: "#ffffff",
     cursor: "pointer",
   },
 
   primaryButton: {
     border: "none",
-    borderRadius: 14,
-    background: "linear-gradient(90deg, #4f46e5, #06b6d4)",
+    borderRadius: 12,
+    padding: "12px 18px",
+    background: "#2f4b88",
     color: "#ffffff",
-    padding: "12px 20px",
+    fontWeight: 700,
     fontSize: 14,
-    fontWeight: 900,
     cursor: "pointer",
+  },
+
+  errorContainer: {
+    minHeight: 56,
+    display: "flex",
+    alignItems: "center",
   },
 };

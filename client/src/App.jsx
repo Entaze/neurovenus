@@ -12,9 +12,18 @@ import ExportsPage from "./pages/researcher/ExportsPage";
 import CreateStudyPage from "./pages/researcher/CreateStudyPage";
 import StudyDetail from "./pages/researcher/StudyDetail";
 import StudiesPage from "./pages/researcher/StudiesPage";
+import FeedbackPage from "../src/components/researcher/FeedbackPage";
+import AdminFeedbackPage from "../src/components/admin/AdminFeedbackPage";
+import UnauthorizedPage from "./pages/UnauthorizedPage";
+import HelpPage from "./pages/HelpPage";
+import OrganizationPage from "./pages/OrganizationPage";
+import TeamPage from "./pages/TeamPage";
+import BillingPage from "./pages/BillingPage";
+import NotificationsPage from "./pages/NotificationsPage";
 
 import { ResearcherAuthProvider } from "./context/ResearcherAuthContext";
 import ResearcherProtectedRoute from "./routes/ResearcherProtectedRoute";
+
 
 function App() {
   return (
@@ -80,6 +89,15 @@ function App() {
             </ResearcherProtectedRoute>
           }
         />
+
+        <Route path="/researcher/feedback" element={<FeedbackPage />} />
+        <Route path="/admin/feedback" element={<AdminFeedbackPage />} />
+        <Route path="/unauthorized" element={<UnauthorizedPage />} />
+        <Route path="/organization" element={<OrganizationPage />} />
+        <Route path="/help" element={<HelpPage />} />
+        <Route path="/team" element={<TeamPage />} />
+        <Route path="/billing" element={<BillingPage />} />
+        <Route path="/notifications" element={<NotificationsPage />} />
       </Routes>
     </ResearcherAuthProvider>
   );

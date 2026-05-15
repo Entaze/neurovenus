@@ -24,16 +24,14 @@ export default function ExportButton({
 
 const styles = {
   button: {
-    padding: "12px 20px",
-    borderRadius: 10,
     border: "none",
-    cursor: "pointer",
-    background: "linear-gradient(90deg, #06b6d4, #2563eb)",
+    borderRadius: 12,
+    padding: "12px 18px",
+    background: "#2f4b88",
     color: "#ffffff",
+    fontWeight: 700,
     fontSize: 14,
-    fontWeight: 600,
-    boxShadow: "0 8px 24px rgba(37, 99, 235, 0.35)",
-    transition: "all 0.2s ease",
+    cursor: "pointer",
   },
 
   disabled: {

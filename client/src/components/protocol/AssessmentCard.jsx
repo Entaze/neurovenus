@@ -1,16 +1,31 @@
-export default function AssessmentCard({
-  assessment,
-  index,
-  onRemove,
-}) {
+import { useState } from "react";
+import { Clock } from "lucide-react";
+
+export default function AssessmentCard({ assessment, index, onRemove }) {
+  const [hovered, setHovered] = useState(false);
+
   return (
-    <div style={styles.card}>
+    <div
+      style={{
+        ...styles.card,
+        ...(hovered ? styles.cardHover : {}),
+      }}
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
+    >
       <div style={styles.number}>{index + 1}</div>
 
       <div style={styles.content}>
         <div style={styles.topRow}>
           <p style={styles.name}>{assessment.name}</p>
           <span style={styles.category}>{assessment.category}</span>
+
+          {assessment.estimatedDurationMinutes && (
+            <span style={styles.duration}>
+              <Clock size={12} strokeWidth={1.75} />
+              {assessment.estimatedDurationMinutes} min
+            </span>
+          )}
         </div>
 
         <p style={styles.description}>
@@ -18,11 +33,7 @@ export default function AssessmentCard({
         </p>
       </div>
 
-      <button
-        type="button"
-        onClick={onRemove}
-        style={styles.removeButton}
-      >
+      <button type="button" onClick={onRemove} style={styles.removeButton}>
         Remove
       </button>
     </div>
@@ -39,6 +50,12 @@ const styles = {
     borderRadius: 18,
     background: "rgba(15, 23, 42, 0.72)",
     border: "1px solid rgba(148, 163, 184, 0.18)",
+    transition: "background 0.18s ease, border-color 0.18s ease",
+  },
+
+  cardHover: {
+    background: "rgba(30, 41, 59, 0.82)",
+    border: "1px solid rgba(59, 130, 246, 0.22)",
   },
 
   number: {
@@ -78,6 +95,19 @@ const styles = {
     color: "#a5b4fc",
     fontSize: 11,
     fontWeight: 800,
+  },
+
+  duration: {
+    display: "inline-flex",
+    alignItems: "center",
+    gap: 5,
+    padding: "4px 8px",
+    borderRadius: 999,
+    background: "rgba(148, 163, 184, 0.08)",
+    border: "1px solid rgba(148, 163, 184, 0.12)",
+    color: "#cbd5e1",
+    fontSize: 11,
+    fontWeight: 700,
   },
 
   description: {

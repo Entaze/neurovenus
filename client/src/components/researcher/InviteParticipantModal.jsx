@@ -2,36 +2,48 @@
 
 import { useState } from "react";
 
+const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
 export default function InviteParticipantModal({
   onInvite,
+  disabled = false,
   loading = false,
   studyId,
 }) {
   const [email, setEmail] = useState("");
   const [error, setError] = useState("");
 
+  const isDisabled = disabled || loading || !studyId;
+
   const handleSubmit = async (e) => {
     e.preventDefault();
-
     setError("");
 
-    if (!email.trim()) {
+    if (isDisabled) {
+      setError("Create and select a study before inviting participants.");
+      return;
+    }
+
+    const trimmedEmail = email.trim().toLowerCase();
+
+    if (!trimmedEmail) {
       setError("Please enter a participant email address.");
       return;
     }
 
-    if (!studyId) {
-      setError("Please select a study first.");
+    if (!emailRegex.test(trimmedEmail)) {
+      setError("Please enter a valid participant email address.");
       return;
     }
 
     try {
       await onInvite?.({
-        email: email.trim().toLowerCase(),
+        email: trimmedEmail,
         studyId,
       });
 
       setEmail("");
+      setError("");
     } catch (err) {
       setError(err?.message || "Failed to send invitation.");
     }
@@ -40,34 +52,56 @@ export default function InviteParticipantModal({
   return (
     <div style={styles.card}>
       <h3 style={styles.title}>Invite Participant</h3>
+
       <p style={styles.subtitle}>
         Enter a participant's email address to generate a secure invitation link
         and send the study invite automatically.
       </p>
 
-      <form onSubmit={handleSubmit} style={styles.form}>
+      {isDisabled && !loading && (
+        <div style={styles.emptyState}>
+          <p style={styles.emptyTitle}>Create and select a study first.</p>
+          <p style={styles.emptySubtitle}>
+            You can invite participants once a study protocol exists.
+          </p>
+        </div>
+      )}
+
+      <form onSubmit={handleSubmit} style={styles.form} noValidate>
         <input
           type="email"
+          inputMode="email"
+          autoComplete="email"
           placeholder="participant@example.com"
           value={email}
-          onChange={(e) => setEmail(e.target.value)}
-          style={styles.input}
-          disabled={loading}
+          onChange={(e) => {
+            setEmail(e.target.value);
+            if (error) setError("");
+          }}
+          style={{
+            ...styles.input,
+            ...(isDisabled ? styles.inputDisabled : {}),
+          }}
+          disabled={isDisabled}
         />
 
         <button
           type="submit"
-          disabled={loading}
+          disabled={isDisabled || loading || !email.trim()}
           style={{
             ...styles.button,
-            ...(loading ? styles.buttonDisabled : {}),
+            ...(isDisabled || loading || !email.trim()
+              ? styles.buttonDisabled
+              : {}),
           }}
         >
           {loading ? "Sending..." : "Send Invitation"}
         </button>
       </form>
 
-      {error && <p style={styles.error}>{error}</p>}
+      <div style={styles.errorContainer}>
+        {error ? <p style={styles.error}>{error}</p> : null}
+      </div>
     </div>
   );
 }
@@ -90,7 +124,7 @@ const styles = {
 
   subtitle: {
     marginTop: 8,
-    marginBottom: 20,
+    marginBottom: 16,
     color: "#94a3b8",
     fontSize: 14,
     lineHeight: 1.6,
@@ -114,27 +148,60 @@ const styles = {
     fontSize: 14,
   },
 
+  inputDisabled: {
+    opacity: 0.55,
+    cursor: "not-allowed",
+  },
+
   button: {
-    padding: "12px 20px",
-    borderRadius: 10,
     border: "none",
-    cursor: "pointer",
-    background: "linear-gradient(90deg, #06b6d4, #2563eb)",
+    borderRadius: 12,
+    padding: "12px 18px",
+    background: "#2f4b88",
     color: "#ffffff",
-    fontWeight: 600,
+    fontWeight: 700,
     fontSize: 14,
-    boxShadow: "0 8px 24px rgba(37, 99, 235, 0.35)",
+    cursor: "pointer",
   },
 
   buttonDisabled: {
-    opacity: 0.6,
+    opacity: 0.55,
     cursor: "not-allowed",
     boxShadow: "none",
   },
 
+  errorContainer: {
+    minHeight: 26,
+    marginTop: 10,
+  },
+
   error: {
-    marginTop: 12,
+    margin: 0,
     color: "#f87171",
     fontSize: 13,
+  },
+
+  emptyState: {
+    padding: "28px 24px",
+    marginBottom: 16,
+    textAlign: "center",
+    borderRadius: 16,
+    border: "1px dashed rgba(255,255,255,0.08)",
+    background: "rgba(255,255,255,0.02)",
+  },
+
+  emptyTitle: {
+    margin: 0,
+    fontSize: 15,
+    fontWeight: 600,
+    color: "#e2e8f0",
+  },
+
+  emptySubtitle: {
+    marginTop: 8,
+    marginBottom: 0,
+    fontSize: 14,
+    color: "#94a3b8",
+    lineHeight: 1.6,
   },
 };

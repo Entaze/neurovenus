@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import ResearcherLayout from "../../components/researcher/ResearcherLayout";
+import StatCard from "../../components/researcher/StatCard";
 import { researcherApi } from "../../api/researcherApi";
 
 export default function StudiesPage() {
@@ -44,6 +45,28 @@ export default function StudiesPage() {
     };
   }, []);
 
+  // Dashboard metrics
+  const activeStudies = studies.length;
+
+  const totalSessions = studies.reduce(
+    (sum, study) => sum + (study.sessions?.length || study.protocol?.sessions?.length || 0),
+    0
+  );
+
+  const totalAssessments = studies.reduce((sum, study) => {
+    const sessions = study.sessions || study.protocol?.sessions || [];
+
+    return (
+      sum +
+      sessions.reduce((sessionSum, session) => {
+        const assessments = session.assessments || session.tasks || [];
+        return sessionSum + assessments.length;
+      }, 0)
+    );
+  }, 0);
+
+  const latestStudy = studies[0]?.title || "None";
+
   return (
     <ResearcherLayout>
       <div style={styles.header}>
@@ -53,8 +76,8 @@ export default function StudiesPage() {
             Create, manage, and monitor all of your research studies.
           </p>
           <p style={styles.infoNote}>
-            Protocols are locked after creation to preserve data integrity. To make
-            changes, create a new study version.
+            Protocols are locked after creation to preserve data integrity.
+            To make changes, create a new study version.
           </p>
         </div>
 
@@ -67,6 +90,39 @@ export default function StudiesPage() {
         </button>
       </div>
 
+      {/* Stats */}
+      {!loading && studies.length > 0 && (
+        <div style={styles.statsGrid}>
+          <StatCard
+            label="Active Studies"
+            value={activeStudies}
+            subtitle="Studies currently available"
+            accent="#38bdf8"
+          />
+
+          <StatCard
+            label="Sessions"
+            value={totalSessions}
+            subtitle="Configured across all studies"
+            accent="#6366f1"
+          />
+
+          <StatCard
+            label="Assessments"
+            value={totalAssessments}
+            subtitle="Included across all protocols"
+            accent="#22c55e"
+          />
+
+          <StatCard
+            label="Latest Study"
+            value={latestStudy}
+            subtitle="Most recently created protocol"
+            accent="#a855f7"
+          />
+        </div>
+      )}
+
       {error && <div style={styles.error}>{error}</div>}
 
       <section style={styles.card}>
@@ -75,7 +131,7 @@ export default function StudiesPage() {
         ) : studies.length === 0 ? (
           <div style={styles.emptyState}>
             <h3 style={styles.emptyTitle}>No studies yet</h3>
-            <p style={styles.muted}>
+            <p style={styles.emptySubtitle}>
               Create your first study protocol to begin inviting participants.
             </p>
 
@@ -126,6 +182,13 @@ const styles = {
     display: "flex",
     justifyContent: "space-between",
     alignItems: "flex-start",
+    gap: 16,
+    marginBottom: 24,
+  },
+
+  statsGrid: {
+    display: "grid",
+    gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))",
     gap: 16,
     marginBottom: 24,
   },
@@ -195,11 +258,11 @@ const styles = {
     border: "none",
     borderRadius: 12,
     padding: "12px 18px",
-    background: "linear-gradient(90deg, #0ea5e9, #2563eb)",
+    background: "#2f4b88",
     color: "#ffffff",
     fontWeight: 700,
+    fontSize: 14,
     cursor: "pointer",
-    boxShadow: "0 12px 28px rgba(37, 99, 235, 0.22)",
   },
 
   secondaryButton: {
@@ -212,15 +275,26 @@ const styles = {
   },
 
   emptyState: {
+    padding: "36px 24px",
     textAlign: "center",
-    padding: "48px 24px",
+    borderRadius: 16,
+    border: "1px dashed rgba(255,255,255,0.08)",
+    background: "rgba(255,255,255,0.02)",
   },
 
   emptyTitle: {
-    marginTop: 0,
-    marginBottom: 12,
-    fontSize: 22,
-    color: "#ffffff",
+    margin: 0,
+    fontSize: 15,
+    fontWeight: 600,
+    color: "#e2e8f0",
+  },
+
+  emptySubtitle: {
+    marginTop: 8,
+    marginBottom: 20,
+    fontSize: 14,
+    color: "#94a3b8",
+    lineHeight: 1.6,
   },
 
   muted: {

@@ -9,11 +9,11 @@ import {
 } from "react";
 import { useSearchParams } from "react-router-dom";
 
-import api from "../api/client";
-import PrimaryButton from "../components/PrimaryButton";
-import StatusCard from "../components/StatusCard";
-import { TASK_TIMING } from "../config/taskTiming";
-import { getProtocol } from "../config/protocols";
+import api from "../../api/client";
+import PrimaryButton from "../../components/PrimaryButton";
+import StatusCard from "../../components/StatusCard";
+import { TASK_TIMING } from "../../config/taskTiming";
+import { getProtocol } from "../../config/protocols";
 
 const ACTIVE_DURATION = TASK_TIMING.fingerTapping.activeDurationSeconds;
 const REST_DURATION = TASK_TIMING.fingerTapping.restDurationSeconds;
@@ -28,6 +28,7 @@ export default function FingerTapTask({
   const token = searchParams.get("token");
 
   const textareaRef = useRef(null);
+  const taskStartedAtRef = useRef(null);
 
   const [phase, setPhase] = useState("instructions");
   const [round, setRound] = useState(1);
@@ -62,32 +63,23 @@ export default function FingerTapTask({
     ? protocol.fingerTapping.session2Rounds
     : protocol.fingerTapping.session1Rounds;
 
-  // console.log("Finger Tapping Configuration:", {
-  //   sessionName,
-  //   sessionOrder,
-  //   isFollowUpSession,
-  //   TOTAL_ROUNDS,
-  //   targetSequence: protocol.fingerTapping.targetSequence,
-  // });
-
   const scoreRound = useCallback(
     (rawInput) => {
       const cleaned = rawInput.replace(/[^0-9]/g, "");
-      const totalCharactersTyped = cleaned.length;
+      const sequenceLength = TARGET_SEQUENCE.length;
 
       let correctSequences = 0;
 
-      for (let i = 0; i <= cleaned.length - TARGET_SEQUENCE.length; i += 1) {
-        const chunk = cleaned.slice(i, i + TARGET_SEQUENCE.length);
+      for (let i = 0; i <= cleaned.length - sequenceLength; i += sequenceLength) {
+        const chunk = cleaned.slice(i, i + sequenceLength);
 
         if (chunk === TARGET_SEQUENCE) {
           correctSequences += 1;
         }
       }
 
-      const possibleSequences = Math.floor(
-        totalCharactersTyped / TARGET_SEQUENCE.length
-      );
+      const totalCharactersTyped = cleaned.length;
+      const possibleSequences = Math.floor(totalCharactersTyped / sequenceLength);
 
       const accuracy =
         possibleSequences > 0 ? correctSequences / possibleSequences : 0;
@@ -95,6 +87,7 @@ export default function FingerTapTask({
       return {
         sequence: TARGET_SEQUENCE,
         rawInput,
+        cleanedInput: cleaned,
         totalCharactersTyped,
         correctSequences,
         possibleSequences,
@@ -125,14 +118,33 @@ export default function FingerTapTask({
             ? totalCorrectSequences / totalPossibleSequences
             : 0;
 
+        const totalCharactersTyped = allRounds.reduce(
+          (sum, r) => sum + r.totalCharactersTyped,
+          0
+        );
+
+        const bestRoundScore = allRounds.length
+          ? Math.max(...allRounds.map((r) => r.correctSequences))
+          : 0;
+
+        const meanCorrectSequencesPerRound =
+          allRounds.length > 0
+            ? totalCorrectSequences / allRounds.length
+            : 0;
+
         await api.post("/tasks/complete", {
           sessionRunId: sessionRun._id,
           taskType: task.type,
           taskVersion: task.version,
+          startedAt: taskStartedAtRef.current,
           summary: {
             sequence: TARGET_SEQUENCE,
             roundsCompleted: allRounds.length,
             totalCorrectSequences,
+            totalPossibleSequences,
+            totalCharactersTyped,
+            bestRoundScore,
+            meanCorrectSequencesPerRound,
             overallAccuracy,
           },
           trials: allRounds.map((result, index) => ({
@@ -142,6 +154,11 @@ export default function FingerTapTask({
             actualResponse: result.rawInput,
             correct: result.accuracy === 1,
             reactionTimeMs: null,
+
+            totalCharactersTyped: result.totalCharactersTyped,
+            correctSequences: result.correctSequences,
+            possibleSequences: result.possibleSequences,
+            accuracy: result.accuracy,
           })),
         });
 
@@ -227,6 +244,8 @@ export default function FingerTapTask({
   }, [phase]);
 
   const startTask = () => {
+    taskStartedAtRef.current = new Date().toISOString();
+
     setRound(1);
     setRoundResults([]);
     setCurrentInput("");
