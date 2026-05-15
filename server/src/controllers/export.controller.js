@@ -13,6 +13,24 @@ const flattenSummary = (summary = {}) => {
   return flattened;
 };
 
+const flattenTrial = (trial = {}) => {
+  const flattened = {};
+
+  Object.entries(trial).forEach(([key, value]) => {
+    if (key === "metadata") return;
+
+    flattened[`trial_${key}`] = value;
+  });
+
+  if (trial.metadata && typeof trial.metadata === "object") {
+    Object.entries(trial.metadata).forEach(([key, value]) => {
+      flattened[`trial_metadata_${key}`] = value;
+    });
+  }
+
+  return flattened;
+};
+
 const escapeCsvValue = (value) => {
   if (value === null || value === undefined) return "";
 
@@ -207,32 +225,15 @@ const exportStudyData = async (req, res) => {
       };
 
       if (!taskRun.trials || taskRun.trials.length === 0) {
-        rows.push({
-          ...baseRow,
-          trialNumber: null,
-          trialPhase: null,
-          trialLabel: null,
-          stimulus: null,
-          expectedResponse: null,
-          actualResponse: null,
-          correct: null,
-          reactionTimeMs: null,
-        });
+        rows.push(baseRow);
 
-        continue;
-      }
+          continue;
+        }
 
       for (const trial of taskRun.trials) {
         rows.push({
           ...baseRow,
-          trialNumber: trial.trialNumber,
-          trialPhase: trial.trialPhase,
-          trialLabel: trial.trialLabel,
-          stimulus: trial.stimulus,
-          expectedResponse: trial.expectedResponse,
-          actualResponse: trial.actualResponse,
-          correct: trial.correct,
-          reactionTimeMs: trial.reactionTimeMs,
+          ...flattenTrial(trial),
         });
       }
     }

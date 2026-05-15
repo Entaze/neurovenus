@@ -42,6 +42,18 @@ const getParticipantsByStudy = async (req, res) => {
       });
     }
 
+    const study = await Study.findOne({
+      _id: studyId,
+      createdBy: req.user._id,
+    });
+
+    if (!study) {
+      return res.status(404).json({
+        success: false,
+        message: "Study not found",
+      });
+    }
+
     const participants = await Participant.find({ studyId }).sort({
       createdAt: -1,
     });
@@ -87,7 +99,10 @@ const inviteParticipant = async (req, res) => {
       });
     }
 
-    const study = await Study.findById(studyId);
+    const study = await Study.findOne({
+      _id: studyId,
+      createdBy: req.user._id,
+    });
 
     if (!study) {
       return res.status(404).json({

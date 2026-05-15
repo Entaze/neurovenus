@@ -4,15 +4,33 @@ const trialSchema = new mongoose.Schema(
   {
     trialNumber: Number,
 
+    trialPhase: String,
+    condition: String,
+    mode: String,
+    spanLength: Number,
+    itemId: String,
+    itemLabel: String,
+    section: String,
+    responseType: String,
+
     stimulus: String,
-
     expectedResponse: String,
-
     actualResponse: String,
 
     correct: Boolean,
-
     reactionTimeMs: Number,
+    responseTimeMs: Number,
+
+    startedAt: Date,
+    answeredAt: Date,
+
+    isPractice: Boolean,
+
+    // Finger Tapping round-level metrics
+    totalCharactersTyped: Number,
+    correctSequences: Number,
+    possibleSequences: Number,
+    accuracy: Number,
 
     metadata: {
       type: Object,
@@ -21,6 +39,7 @@ const trialSchema = new mongoose.Schema(
   },
   {
     _id: false,
+    strict: false,
   }
 );
 

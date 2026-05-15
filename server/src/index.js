@@ -7,12 +7,14 @@ const dotenv = require("dotenv");
 const connectDB = require("./config/db");
 const { startReminderScheduler } = require("./utils/reminderScheduler");
 
+const path = require("path");
 const studyRoutes = require("./routes/study.routes");
 const participantRoutes = require("./routes/participant.routes");
 const sessionRoutes = require("./routes/session.routes");
 const assessmentRoutes = require("./routes/assessment.routes");
 const exportRoutes = require("./routes/export.routes");
 const authRoutes = require("./routes/auth.routes");
+const feedbackRoutes = require("./routes/feedback.routes");
 
 // Load environment variables
 dotenv.config();
@@ -57,6 +59,10 @@ app.use(
 
 // Parse JSON request bodies
 app.use(express.json());
+app.use(
+  "/uploads",
+  express.static(path.join(__dirname, "uploads"))
+);
 
 /**
  * API Routes
@@ -67,6 +73,7 @@ app.use("/api/sessions", sessionRoutes);
 app.use("/api/tasks", assessmentRoutes);
 app.use("/api", exportRoutes);
 app.use("/api/auth", authRoutes);
+app.use("/api/feedback", feedbackRoutes);
 
 /**
  * Health check route

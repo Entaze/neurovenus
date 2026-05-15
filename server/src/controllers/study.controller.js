@@ -1,7 +1,20 @@
 const Study = require("../models/Study");
 
+const getUserId = (req) => {
+  return req.user?._id || req.user?.id || req.user?.sub;
+};
+
 const createStudy = async (req, res) => {
   try {
+    const userId = getUserId(req);
+
+    if (!userId) {
+      return res.status(401).json({
+        success: false,
+        message: "Authentication required",
+      });
+    }
+
     const incomingProtocolSessions = req.body?.protocol?.sessions || [];
     const incomingLegacySessions = req.body.sessions || [];
 
@@ -34,22 +47,19 @@ const createStudy = async (req, res) => {
         unlockAfterHours: session.unlockAfterHours || 0,
         expiresAfterHours: session.expiresAfterHours || 24,
         assessments: normalizedAssessments,
-
-        // Backward compatibility for existing execution/export logic.
         tasks: normalizedAssessments,
       };
     });
 
     const payload = {
       ...req.body,
+      createdBy: userId,
       protocolVersion: req.body.protocolVersion || "custom",
       protocol: {
         type: req.body?.protocol?.type || "custom",
         version: req.body?.protocol?.version || "v1",
         sessions: normalizedSessions,
       },
-
-      // Backward compatibility for existing app screens/controllers.
       sessions: normalizedSessions,
     };
 
@@ -72,7 +82,18 @@ const createStudy = async (req, res) => {
 
 const getStudies = async (req, res) => {
   try {
-    const studies = await Study.find().sort({ createdAt: -1 });
+    const userId = getUserId(req);
+
+    if (!userId) {
+      return res.status(401).json({
+        success: false,
+        message: "Authentication required",
+      });
+    }
+
+    const studies = await Study.find({ createdBy: userId }).sort({
+      createdAt: -1,
+    });
 
     res.json({
       success: true,
@@ -91,9 +112,20 @@ const getStudies = async (req, res) => {
 
 const getStudyById = async (req, res) => {
   try {
+    const userId = getUserId(req);
     const { studyId } = req.params;
 
-    const study = await Study.findById(studyId);
+    if (!userId) {
+      return res.status(401).json({
+        success: false,
+        message: "Authentication required",
+      });
+    }
+
+    const study = await Study.findOne({
+      _id: studyId,
+      createdBy: userId,
+    });
 
     if (!study) {
       return res.status(404).json({
@@ -119,10 +151,21 @@ const getStudyById = async (req, res) => {
 
 const updateStudy = async (req, res) => {
   try {
+    const userId = getUserId(req);
     const { studyId } = req.params;
 
-    const study = await Study.findByIdAndUpdate(
-      studyId,
+    if (!userId) {
+      return res.status(401).json({
+        success: false,
+        message: "Authentication required",
+      });
+    }
+
+    const study = await Study.findOneAndUpdate(
+      {
+        _id: studyId,
+        createdBy: userId,
+      },
       req.body,
       {
         new: true,

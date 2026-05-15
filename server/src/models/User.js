@@ -32,6 +32,25 @@ const userSchema = new mongoose.Schema(
       default: "",
     },
 
+    // Subscription plan
+    plan: {
+      type: String,
+      enum: ["pilot", "free", "pro", "institutional"],
+      default: "pilot",
+    },
+
+    // Account active/inactive
+    isActive: {
+      type: Boolean,
+      default: true,
+    },
+
+    // Force password change after first login
+    mustChangePassword: {
+      type: Boolean,
+      default: true,
+    },
+
     lastLoginAt: {
       type: Date,
     },

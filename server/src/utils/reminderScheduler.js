@@ -3,7 +3,10 @@ const SessionRun = require("../models/SessionRun");
 const Study = require("../models/Study");
 const { sendSessionReminderEmail } = require("./email");
 
-const CHECK_INTERVAL_MS = 5 * 60 * 1000;
+const CHECK_INTERVAL_MS =
+  process.env.NODE_ENV === "production"
+    ? 60 * 1000
+    : 15 * 1000;
 
 let reminderInterval = null;
 let isChecking = false;

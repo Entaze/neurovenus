@@ -1,4 +1,5 @@
 const express = require("express");
+const requireAuth = require("../middleware/auth");
 
 const {
   inviteParticipant,
@@ -8,8 +9,10 @@ const {
 
 const router = express.Router();
 
-router.get("/", getParticipantsByStudy);
-router.post("/invite", inviteParticipant);
+router.get("/", requireAuth, getParticipantsByStudy);
+router.post("/invite", requireAuth, inviteParticipant);
+
+// Participant access must remain public because participants use token links.
 router.get("/access", validateParticipantAccess);
 
 module.exports = router;
