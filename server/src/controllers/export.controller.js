@@ -227,8 +227,8 @@ const exportStudyData = async (req, res) => {
       if (!taskRun.trials || taskRun.trials.length === 0) {
         rows.push(baseRow);
 
-          continue;
-        }
+        continue;
+      }
 
       for (const trial of taskRun.trials) {
         rows.push({
@@ -241,10 +241,43 @@ const exportStudyData = async (req, res) => {
     if (format === "csv") {
       const csv = convertRowsToCsv(rows);
 
+      const slugify = (value = "") =>
+        String(value)
+          .toLowerCase()
+          .trim()
+          .replace(/[^a-z0-9]+/g, "-")
+          .replace(/^-+|-+$/g, "");
+
+      const today = new Date().toISOString().slice(0, 10);
+
+      const selectedParticipant = participants[0];
+
+      const filenameParts = [
+        "neurovenus",
+        slugify(study.title || "study"),
+
+        // Participant-specific export
+        participantId || participantCode
+          ? selectedParticipant?.participantCode ||
+            slugify(selectedParticipant?.email || "participant")
+          : null,
+
+        // Session-specific export
+        sessionOrder ? `session-${sessionOrder}` : null,
+
+        // Assessment-specific export
+        taskType ? slugify(taskType) : null,
+
+        // Date stamp
+        today,
+      ].filter(Boolean);
+
+      const filename = `${filenameParts.join("_")}.csv`;
+
       res.setHeader("Content-Type", "text/csv");
       res.setHeader(
         "Content-Disposition",
-        `attachment; filename="cognitivevault-study-${studyId}.csv"`
+        `attachment; filename="${filename}"`
       );
 
       return res.send(csv);

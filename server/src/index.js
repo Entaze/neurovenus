@@ -121,5 +121,9 @@ const PORT = process.env.PORT || 4000;
 app.listen(PORT, () => {
   console.log(`Neurovenus API running on port ${PORT}`);
   console.log("Allowed origins:", allowedOrigins.join(", "));
-  startReminderScheduler();
+  if (process.env.ENABLE_REMINDER_SCHEDULER === "true") {
+    startReminderScheduler();
+  } else {
+    console.log("Reminder scheduler disabled.");
+  }
 });
