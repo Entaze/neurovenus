@@ -432,4 +432,65 @@ describe("Neurovenus Privacy Architecture", () => {
 
     expect(studyCount).toBe(10);
   });
+
+  test("standard plan cannot exceed 2000 participants per month", async () => {
+    const sarahStudy = await Study.create({
+      title: "Sarah Participant Limit Study",
+      description: "Participant limit enforcement",
+      organizationId: org._id,
+      createdBy: sarah._id,
+      protocolVersion: "custom",
+      protocol: {
+        type: "custom",
+        version: "v1",
+        sessions: [],
+      },
+      sessions: [],
+      active: true,
+    });
+
+    const participants = [];
+
+    for (let i = 0; i < 2000; i++) {
+      participants.push({
+        studyId: sarahStudy._id,
+        organizationId: org._id,
+        createdBy: sarah._id,
+        participantCode: `P-${i}`,
+        email: `participant${i}@example.com`,
+        tokenId: `token-${i}`,
+        accessTokenHash: `hash-${i}`,
+        createdAt: new Date(),
+      });
+    }
+
+    await Participant.insertMany(participants);
+
+    const response = await request(app)
+      .post("/api/participants/invite")
+      .set("Authorization", `Bearer ${sarahToken}`)
+      .send({
+        studyId: sarahStudy._id,
+        email: "participant2001@example.com",
+      });
+
+    expect(response.status).toBe(403);
+
+    expect(response.body.success).toBe(false);
+
+    expect(response.body.code).toBe(
+      "PARTICIPANT_LIMIT_REACHED"
+    );
+
+    expect(response.body.message).toContain(
+      "2000 participants"
+    );
+
+    const participantCount = await Participant.countDocuments({
+      organizationId: org._id,
+      createdBy: sarah._id,
+    });
+
+    expect(participantCount).toBe(2000);
+  });
 });
