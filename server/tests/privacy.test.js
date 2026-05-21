@@ -493,4 +493,25 @@ describe("Neurovenus Privacy Architecture", () => {
 
     expect(participantCount).toBe(2000);
   });
+
+  test("standard plan cannot invite researchers", async () => {
+    const response = await request(app)
+      .post("/api/researchers/invite")
+      .set("Authorization", `Bearer ${janeToken}`)
+      .send({
+        email: "newresearcher@example.com",
+      });
+
+    expect(response.status).toBe(403);
+
+    expect(response.body.success).toBe(false);
+
+    expect(response.body.code).toBe(
+      "RESEARCHER_INVITES_NOT_INCLUDED"
+    );
+
+    expect(response.body.message).toBe(
+      "Researcher invitations are only available on Institutional plans."
+    );
+  });
 });

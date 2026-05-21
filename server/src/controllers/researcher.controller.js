@@ -83,6 +83,17 @@ const inviteResearcher = async (req, res) => {
       });
     }
 
+    const allowedPlans = ["pilot", "institutional", "custom"];
+
+    if (!allowedPlans.includes(organization.plan)) {
+      return res.status(403).json({
+        success: false,
+        code: "RESEARCHER_INVITES_NOT_INCLUDED",
+        message:
+          "Researcher invitations are only available on Institutional plans.",
+      });
+    }
+
     const limits = getPlanLimits(organization);
 
     const seatCount = await User.countDocuments({
