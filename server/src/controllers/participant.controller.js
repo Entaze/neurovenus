@@ -4,6 +4,8 @@ const bcrypt = require("bcryptjs");
 const Study = require("../models/Study");
 const Participant = require("../models/Participant");
 const SessionRun = require("../models/SessionRun");
+const Organization = require("../models/Organization");
+const { getPlanLimits } = require("../utils/planLimits");
 
 const {
   sendParticipantInviteEmail,
@@ -32,8 +34,18 @@ function deriveParticipantStatus(sessionRuns = []) {
 }
 
 const getParticipantsByStudy = async (req, res) => {
+  const userId = req.user?._id || req.user?.id || req.user?.sub;
+
   try {
     const { studyId } = req.query;
+    const organizationId = req.user?.organizationId;
+
+    if (!organizationId) {
+      return res.status(401).json({
+        success: false,
+        message: "Organization context required",
+      });
+    }
 
     if (!studyId) {
       return res.status(400).json({
@@ -44,7 +56,8 @@ const getParticipantsByStudy = async (req, res) => {
 
     const study = await Study.findOne({
       _id: studyId,
-      createdBy: req.user._id,
+      organizationId,
+      createdBy: userId,
     });
 
     if (!study) {
@@ -54,7 +67,11 @@ const getParticipantsByStudy = async (req, res) => {
       });
     }
 
-    const participants = await Participant.find({ studyId }).sort({
+    const participants = await Participant.find({
+      studyId,
+      organizationId,
+      createdBy: userId,
+    }).sort({
       createdAt: -1,
     });
 
@@ -91,6 +108,14 @@ const getParticipantsByStudy = async (req, res) => {
 const inviteParticipant = async (req, res) => {
   try {
     const { studyId, email, metadata = {} } = req.body;
+    const organizationId = req.user?.organizationId;
+
+    if (!organizationId) {
+      return res.status(401).json({
+        success: false,
+        message: "Organization context required",
+      });
+    }
 
     if (!studyId || !email) {
       return res.status(400).json({
@@ -99,9 +124,48 @@ const inviteParticipant = async (req, res) => {
       });
     }
 
+    const organization = await Organization.findById(organizationId);
+
+    if (!organization || !organization.isActive) {
+      return res.status(403).json({
+        success: false,
+        message: "Organization is not active",
+      });
+    }
+
+    const limits = getPlanLimits(organization);
+
+    const startOfMonth = new Date();
+    startOfMonth.setDate(1);
+    startOfMonth.setHours(0, 0, 0, 0);
+
+    const startOfNextMonth = new Date(startOfMonth);
+    startOfNextMonth.setMonth(startOfNextMonth.getMonth() + 1);
+
+    const userId = req.user?._id || req.user?.id || req.user?.sub;
+
+    const participantCountThisMonth =
+      await Participant.countDocuments({
+        organizationId,
+        createdBy: userId,
+        createdAt: {
+          $gte: startOfMonth,
+          $lt: startOfNextMonth,
+        },
+      });
+
+    if (participantCountThisMonth >= limits.maxParticipantsPerMonth) {
+      return res.status(403).json({
+        success: false,
+        code: "PARTICIPANT_LIMIT_REACHED",
+        message: `Your current plan allows up to ${limits.maxParticipantsPerMonth} participants per month.`,
+      });
+    }
+
     const study = await Study.findOne({
       _id: studyId,
-      createdBy: req.user._id,
+      organizationId,
+      createdBy: userId,
     });
 
     if (!study) {
@@ -111,11 +175,9 @@ const inviteParticipant = async (req, res) => {
       });
     }
 
-    // Use protocol.sessions if available, otherwise fall back to legacy sessions.
-    const studySessions =
-      study?.protocol?.sessions?.length
-        ? study.protocol.sessions
-        : study.sessions || [];
+    const studySessions = study?.protocol?.sessions?.length
+      ? study.protocol.sessions
+      : study.sessions || [];
 
     if (!studySessions.length) {
       return res.status(400).json({
@@ -135,7 +197,9 @@ const inviteParticipant = async (req, res) => {
 
     const participant = await Participant.create({
       studyId,
+      organizationId,
       email,
+      createdBy: userId,
       participantCode,
       tokenId,
       accessTokenHash,
@@ -152,6 +216,8 @@ const inviteParticipant = async (req, res) => {
         return SessionRun.create({
           participantId: participant._id,
           studyId,
+          organizationId,
+          createdBy: userId,
           sessionName: session.label || session.name,
           sessionOrder: session.order,
           protocolVersion: session.protocolVersion || "custom",

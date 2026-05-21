@@ -67,7 +67,11 @@ const getCurrentTask = async (req, res) => {
       });
     }
 
-    const study = await Study.findById(sessionRun.studyId);
+    const study = await Study.findOne({
+      _id: sessionRun.studyId,
+      organizationId: sessionRun.organizationId,
+      createdBy: sessionRun.createdBy,
+    });
 
     if (!study) {
       return res.status(404).json({

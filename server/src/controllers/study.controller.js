@@ -1,4 +1,6 @@
 const Study = require("../models/Study");
+const Organization = require("../models/Organization");
+const { getPlanLimits } = require("../utils/planLimits");
 
 const getUserId = (req) => {
   return req.user?._id || req.user?.id || req.user?.sub;
@@ -7,6 +9,39 @@ const getUserId = (req) => {
 const createStudy = async (req, res) => {
   try {
     const userId = getUserId(req);
+    const organizationId = req.user?.organizationId;
+
+    if (!organizationId) {
+      return res.status(401).json({
+        success: false,
+        message: "Organization context required",
+      });
+    }
+
+    const organization = await Organization.findById(organizationId);
+
+    if (!organization || !organization.isActive) {
+      return res.status(403).json({
+        success: false,
+        message: "Organization is not active",
+      });
+    }
+
+    const limits = getPlanLimits(organization);
+
+    const activeStudyCount = await Study.countDocuments({
+      organizationId,
+      createdBy: userId,
+      active: true,
+    });
+
+    if (activeStudyCount >= limits.maxActiveStudies) {
+      return res.status(403).json({
+        success: false,
+        code: "ACTIVE_STUDY_LIMIT_REACHED",
+        message: `Your current plan allows up to ${limits.maxActiveStudies} active studies.`,
+      });
+    }
 
     if (!userId) {
       return res.status(401).json({
@@ -53,6 +88,7 @@ const createStudy = async (req, res) => {
 
     const payload = {
       ...req.body,
+      organizationId,
       createdBy: userId,
       protocolVersion: req.body.protocolVersion || "custom",
       protocol: {
@@ -83,6 +119,7 @@ const createStudy = async (req, res) => {
 const getStudies = async (req, res) => {
   try {
     const userId = getUserId(req);
+    const organizationId = req.user?.organizationId;
 
     if (!userId) {
       return res.status(401).json({
@@ -91,7 +128,10 @@ const getStudies = async (req, res) => {
       });
     }
 
-    const studies = await Study.find({ createdBy: userId }).sort({
+    const studies = await Study.find({
+      organizationId,
+      createdBy: userId,
+    }).sort({
       createdAt: -1,
     });
 
@@ -114,6 +154,7 @@ const getStudyById = async (req, res) => {
   try {
     const userId = getUserId(req);
     const { studyId } = req.params;
+    const organizationId = req.user?.organizationId;
 
     if (!userId) {
       return res.status(401).json({
@@ -124,6 +165,7 @@ const getStudyById = async (req, res) => {
 
     const study = await Study.findOne({
       _id: studyId,
+      organizationId,
       createdBy: userId,
     });
 
@@ -153,6 +195,7 @@ const updateStudy = async (req, res) => {
   try {
     const userId = getUserId(req);
     const { studyId } = req.params;
+    const organizationId = req.user?.organizationId;
 
     if (!userId) {
       return res.status(401).json({
@@ -164,11 +207,12 @@ const updateStudy = async (req, res) => {
     const study = await Study.findOneAndUpdate(
       {
         _id: studyId,
+        organizationId,
         createdBy: userId,
       },
       req.body,
       {
-        new: true,
+        returnDocument: "after",
         runValidators: true,
       }
     );

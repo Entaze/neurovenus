@@ -63,6 +63,20 @@ const taskRunSchema = new mongoose.Schema(
       required: true,
     },
 
+    organizationId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Organization",
+      required: true,
+      index: true,
+    },
+
+    createdBy: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+      required: true,
+      index: true,
+    },
+
     taskType: {
       type: String,
       required: true,
@@ -88,5 +102,10 @@ const taskRunSchema = new mongoose.Schema(
     timestamps: true,
   }
 );
+
+taskRunSchema.index({
+  organizationId: 1,
+  createdBy: 1,
+});
 
 module.exports = mongoose.model("AssessmentRun", taskRunSchema);

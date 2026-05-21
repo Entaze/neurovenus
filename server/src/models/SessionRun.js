@@ -14,6 +14,20 @@ const sessionRunSchema = new mongoose.Schema(
       required: true,
     },
 
+    organizationId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Organization",
+      required: true,
+      index: true,
+    },
+
+    createdBy: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+      required: true,
+      index: true,
+    },
+
     sessionName: {
       type: String,
       required: true,
@@ -58,5 +72,10 @@ const sessionRunSchema = new mongoose.Schema(
     timestamps: true,
   }
 );
+
+sessionRunSchema.index({
+  organizationId: 1,
+  createdBy: 1,
+});
 
 module.exports = mongoose.model("SessionRun", sessionRunSchema);

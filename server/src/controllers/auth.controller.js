@@ -2,6 +2,7 @@ const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 
 const User = require("../models/User");
+const Organization = require("../models/Organization");
 
 const login = async (req, res) => {
   try {
@@ -16,12 +17,28 @@ const login = async (req, res) => {
 
     const user = await User.findOne({
       email: email.toLowerCase(),
-    });
+    }).populate("organizationId");
 
     if (!user) {
       return res.status(401).json({
         success: false,
         message: "Invalid credentials",
+      });
+    }
+
+    if (!user.isActive) {
+      return res.status(403).json({
+        success: false,
+        message: "This account is inactive",
+      });
+    }
+
+    const organization = user.organizationId;
+
+    if (!organization || !organization.isActive) {
+      return res.status(403).json({
+        success: false,
+        message: "Organization is inactive or unavailable",
       });
     }
 
@@ -43,7 +60,9 @@ const login = async (req, res) => {
     const token = jwt.sign(
       {
         id: user._id,
+        organizationId: organization._id,
         role: user.role,
+        organizationPlan: organization.plan,
       },
       process.env.JWT_SECRET,
       {
@@ -59,6 +78,16 @@ const login = async (req, res) => {
         name: user.name,
         email: user.email,
         role: user.role,
+        institution: user.institution,
+        mustChangePassword: user.mustChangePassword,
+        organizationId: organization._id,
+        organizationName: organization.name,
+        organizationPlan: organization.plan,
+        organizationStatus: organization.status,
+        organizationMaxSeats: organization.maxSeats,
+        organizationMaxActiveStudies: organization.maxActiveStudies,
+        organizationMaxParticipantsPerMonth:
+          organization.maxParticipantsPerMonth,
       },
     });
   } catch (error) {

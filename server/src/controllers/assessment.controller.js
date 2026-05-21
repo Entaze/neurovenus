@@ -45,7 +45,11 @@ const completeTask = async (req, res) => {
       });
     }
 
-    const study = await Study.findById(sessionRun.studyId);
+    const study = await Study.findOne({
+      _id: sessionRun.studyId,
+      organizationId: sessionRun.organizationId,
+      createdBy: sessionRun.createdBy,
+    });
 
     if (!study) {
       return res.status(404).json({
@@ -54,14 +58,23 @@ const completeTask = async (req, res) => {
       });
     }
 
-    await Participant.findByIdAndUpdate(sessionRun.participantId, {
-      status: "active",
-    });
+    await Participant.findOneAndUpdate(
+      {
+        _id: sessionRun.participantId,
+        organizationId: sessionRun.organizationId,
+        createdBy: sessionRun.createdBy,
+      },
+      {
+        status: "active",
+      }
+    );
 
     const assessmentRun = await AssessmentRun.create({
       participantId: sessionRun.participantId,
       sessionRunId: sessionRun._id,
       studyId: sessionRun.studyId,
+      organizationId: sessionRun.organizationId,
+      createdBy: sessionRun.createdBy,
       taskType,
       taskVersion,
       startedAt: req.body.startedAt || null,
@@ -95,6 +108,8 @@ const completeTask = async (req, res) => {
       if (nextSessionDefinition) {
         const nextSessionRun = await SessionRun.findOne({
           participantId: sessionRun.participantId,
+          organizationId: sessionRun.organizationId,
+          createdBy: sessionRun.createdBy,
           sessionOrder: nextSessionDefinition.order,
         });
 
@@ -121,10 +136,17 @@ const completeTask = async (req, res) => {
           await nextSessionRun.save();
         }
       } else {
-        await Participant.findByIdAndUpdate(sessionRun.participantId, {
-          status: "completed",
-          completedAt: new Date(),
-        });
+        await Participant.findOneAndUpdate(
+          {
+            _id: sessionRun.participantId,
+            organizationId: sessionRun.organizationId,
+            createdBy: sessionRun.createdBy,
+          },
+          {
+            status: "completed",
+            completedAt: new Date(),
+          }
+        );
       }
     }
 

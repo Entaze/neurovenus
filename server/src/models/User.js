@@ -2,6 +2,13 @@ const mongoose = require("mongoose");
 
 const userSchema = new mongoose.Schema(
   {
+    organizationId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Organization",
+      required: true,
+      index: true,
+    },
+
     name: {
       type: String,
       required: true,
@@ -18,41 +25,66 @@ const userSchema = new mongoose.Schema(
 
     passwordHash: {
       type: String,
-      required: true,
+      required: false,
+      default: "",
     },
 
     role: {
       type: String,
-      enum: ["researcher", "admin"],
+      enum: ["owner", "admin", "researcher", "viewer", "superadmin"],
       default: "researcher",
+      index: true,
     },
 
     institution: {
       type: String,
       default: "",
+      trim: true,
     },
 
-    // Subscription plan
-    plan: {
+    status: {
       type: String,
-      enum: ["pilot", "free", "pro", "institutional"],
-      default: "pilot",
+      enum: ["pending", "active", "inactive"],
+      default: "active",
+      index: true,
     },
 
-    // Account active/inactive
     isActive: {
       type: Boolean,
       default: true,
+      index: true,
     },
 
-    // Force password change after first login
     mustChangePassword: {
       type: Boolean,
-      default: true,
+      default: false,
+    },
+
+    inviteTokenHash: {
+      type: String,
+      default: "",
+      select: false,
+    },
+
+    inviteExpiresAt: {
+      type: Date,
+      default: null,
+    },
+
+    invitedBy: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+      default: null,
+    },
+
+    acceptedInviteAt: {
+      type: Date,
+      default: null,
     },
 
     lastLoginAt: {
       type: Date,
+      default: null,
     },
   },
   {

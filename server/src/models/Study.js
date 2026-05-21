@@ -124,9 +124,18 @@ const studySchema = new mongoose.Schema(
       },
     },
 
+    organizationId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Organization",
+      required: true,
+      index: true,
+    },
+
     createdBy: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",
+      required: true,
+      index: true,
     },
 
     // Temporary backward compatibility with existing app screens/controllers.
@@ -141,5 +150,10 @@ const studySchema = new mongoose.Schema(
     timestamps: true,
   }
 );
+
+studySchema.index({
+  organizationId: 1,
+  createdBy: 1,
+});
 
 module.exports = mongoose.model("Study", studySchema);

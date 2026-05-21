@@ -91,6 +91,15 @@ function deriveParticipantStatus(sessionRuns = []) {
 const exportStudyData = async (req, res) => {
   try {
     const { studyId } = req.params;
+    const organizationId = req.user?.organizationId;
+    const userId = req.user?._id || req.user?.id || req.user?.sub;
+
+    if (!organizationId) {
+      return res.status(401).json({
+        success: false,
+        message: "Organization context required",
+      });
+    }
 
     const {
       participantId,
@@ -101,7 +110,11 @@ const exportStudyData = async (req, res) => {
       format,
     } = req.query;
 
-    const study = await Study.findById(studyId).lean();
+    const study = await Study.findOne({
+      _id: studyId,
+      organizationId,
+      createdBy: userId,
+    }).lean();
 
     if (!study) {
       return res.status(404).json({
@@ -110,7 +123,11 @@ const exportStudyData = async (req, res) => {
       });
     }
 
-    const participantQuery = { studyId };
+    const participantQuery = {
+      studyId,
+      organizationId,
+      createdBy: userId,
+    };
 
     if (participantId) {
       participantQuery._id = participantId;
@@ -125,6 +142,8 @@ const exportStudyData = async (req, res) => {
 
     const sessionQuery = {
       studyId,
+      organizationId,
+      createdBy: userId,
       participantId: { $in: participantIds },
     };
 
@@ -137,6 +156,8 @@ const exportStudyData = async (req, res) => {
 
     const taskQuery = {
       studyId,
+      organizationId,
+      createdBy: userId,
       participantId: { $in: participantIds },
       sessionRunId: { $in: sessionRunIds },
     };
@@ -164,7 +185,6 @@ const exportStudyData = async (req, res) => {
       sessionRuns.map((session) => [session._id.toString(), session])
     );
 
-    // Group session runs by participant
     const sessionRunsByParticipant = new Map();
 
     for (const session of sessionRuns) {
@@ -226,7 +246,6 @@ const exportStudyData = async (req, res) => {
 
       if (!taskRun.trials || taskRun.trials.length === 0) {
         rows.push(baseRow);
-
         continue;
       }
 
@@ -256,19 +275,15 @@ const exportStudyData = async (req, res) => {
         "neurovenus",
         slugify(study.title || "study"),
 
-        // Participant-specific export
         participantId || participantCode
           ? selectedParticipant?.participantCode ||
             slugify(selectedParticipant?.email || "participant")
           : null,
 
-        // Session-specific export
         sessionOrder ? `session-${sessionOrder}` : null,
 
-        // Assessment-specific export
         taskType ? slugify(taskType) : null,
 
-        // Date stamp
         today,
       ].filter(Boolean);
 

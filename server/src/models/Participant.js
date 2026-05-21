@@ -8,6 +8,20 @@ const participantSchema = new mongoose.Schema(
       required: true,
     },
 
+    organizationId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Organization",
+      required: true,
+      index: true,
+    },
+
+    createdBy: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+      required: true,
+      index: true,
+    },
+
     participantCode: {
       type: String,
       required: true,
@@ -65,5 +79,10 @@ const participantSchema = new mongoose.Schema(
     timestamps: true,
   }
 );
+
+participantSchema.index({
+  organizationId: 1,
+  createdBy: 1,
+});
 
 module.exports = mongoose.model("Participant", participantSchema);
