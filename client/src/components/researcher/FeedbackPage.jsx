@@ -1,7 +1,19 @@
-// src/pages/researcher/FeedbackPage.jsx
-
 import { useRef, useState } from "react";
 import api from "../../api/client";
+
+const workflowImpacts = [
+  "Minor inconvenience",
+  "Slows me down",
+  "Blocks my study",
+  "Critical issue",
+];
+
+const scientificImportanceOptions = [
+  "Nice to have",
+  "Useful",
+  "Important",
+  "Essential",
+];
 
 const feedbackTypes = [
   "Bug Report",
@@ -30,6 +42,8 @@ const initialForm = {
   description: "",
   category: "Studies",
   priority: "Medium",
+  workflowImpact: "Slows me down",
+  scientificImportance: "Important",
 };
 
 export default function FeedbackPage() {
@@ -103,7 +117,15 @@ export default function FeedbackPage() {
 
       formData.append("type", typeMap[form.type] || "general");
       formData.append("title", form.title.trim());
-      formData.append("description", form.description.trim());
+      const enrichedDescription = `${form.description.trim()}
+
+      ---
+      Pilot feedback context:
+      Impact on workflow: ${form.workflowImpact}
+      Scientific importance: ${form.scientificImportance}`;
+
+      formData.append("description", enrichedDescription);
+
       formData.append("category", categoryMap[form.category] || "other");
       formData.append("priority", form.priority.toLowerCase());
 
@@ -264,6 +286,43 @@ Additional context:`}
                 ))}
               </select>
             </div>
+          </div>
+
+          <div style={styles.grid}>
+            <div style={styles.field}>
+              <label style={styles.label}>Impact on workflow</label>
+
+              <select
+                style={styles.select}
+                value={form.workflowImpact}
+                onChange={(e) => updateField("workflowImpact", e.target.value)}
+              >
+                {workflowImpacts.map((item) => (
+                  <option key={item} value={item}>
+                    {item}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <div style={styles.field}>
+              <label style={styles.label}>Scientific importance</label>
+
+              <select
+                style={styles.select}
+                value={form.scientificImportance}
+                onChange={(e) =>
+                  updateField("scientificImportance", e.target.value)
+                }
+              >
+                {scientificImportanceOptions.map((item) => (
+                  <option key={item} value={item}>
+                    {item}
+                  </option>
+                ))}
+              </select>
+            </div>
+
           </div>
 
           <div style={styles.field}>

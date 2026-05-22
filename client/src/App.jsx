@@ -7,8 +7,10 @@ import SessionComplete from "./pages/participant/SessionComplete";
 import ParticipantComplete from "./pages/participant/ParticipantComplete";
 
 import ResearcherLogin from "./pages/researcher/ResearcherLogin";
+import AcceptInvitePage from "./pages/researcher/AcceptInvitePage";
 import ParticipantsPage from "./pages/researcher/ParticipantsPage";
 import ExportsPage from "./pages/researcher/ExportsPage";
+import ResearchersPage from "./pages/researcher/ResearchersPage";
 import CreateStudyPage from "./pages/researcher/CreateStudyPage";
 import StudyDetail from "./pages/researcher/StudyDetail";
 import StudiesPage from "./pages/researcher/StudiesPage";
@@ -39,10 +41,16 @@ function App() {
         <Route path="/participant/complete" element={<ParticipantComplete />} />
 
         <Route path="/researcher/login" element={<ResearcherLogin />} />
+        <Route path="/researcher/accept-invite" element={<AcceptInvitePage />} />
 
         <Route
           path="/researcher/dashboard"
           element={<Navigate to="/researcher/participants" replace />}
+        />
+
+        <Route
+          path="/researcher/researchers"
+          element={<ResearchersPage />}
         />
 
         <Route

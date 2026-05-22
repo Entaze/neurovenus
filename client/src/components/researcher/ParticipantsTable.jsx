@@ -14,7 +14,7 @@ export default function ParticipantsTable({
     return (
       <div style={styles.emptyState}>
         <p style={styles.emptyTitle}>
-          No participants found for this study yet.
+          No participants found for this protocol yet.
         </p>
         <p style={styles.emptySubtitle}>
           Invite your first participant to begin collecting data.

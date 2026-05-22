@@ -1,5 +1,3 @@
-// src/pages/researcher/ParticipantsPage.jsx
-
 import { useEffect, useMemo, useState } from "react";
 
 import ResearcherLayout from "../../components/researcher/ResearcherLayout";
@@ -93,6 +91,8 @@ export default function ParticipantsPage() {
   const [participantsLoading, setParticipantsLoading] = useState(false);
   const [inviteLoading, setInviteLoading] = useState(false);
   const [error, setError] = useState("");
+  const [usage, setUsage] = useState(null);
+  const [usageLoading, setUsageLoading] = useState(true);
 
   const selectedStudy = useMemo(() => {
     return studies.find((study) => study._id === selectedStudyId);
@@ -226,6 +226,33 @@ export default function ParticipantsPage() {
     };
   }, [selectedStudyId, selectedStudy]);
 
+  useEffect(() => {
+    let ignore = false;
+
+    async function fetchUsage() {
+      try {
+        setUsageLoading(true);
+        const data = await researcherApi.getOrganizationUsage();
+
+        if (!ignore) {
+          setUsage(data);
+        }
+      } catch (err) {
+        console.error("Failed to load organization usage:", err);
+      } finally {
+        if (!ignore) {
+          setUsageLoading(false);
+        }
+      }
+    }
+
+    fetchUsage();
+
+    return () => {
+      ignore = true;
+    };
+  }, []);
+
   const handleStudyChange = (studyId) => {
     setSelectedStudyId(studyId);
     setParticipants([]);
@@ -238,12 +265,25 @@ export default function ParticipantsPage() {
     }
   };
 
+  const isUnlimitedPlan = ["institutional", "custom"].includes(
+    usage?.organization?.plan
+  );
+
+  const participantLimitReached =
+    !isUnlimitedPlan &&
+    usage &&
+    usage.usage.participantsThisMonth >=
+      usage.limits.maxParticipantsPerMonth;
+
   const handleInvite = async ({ email, studyId }) => {
     try {
       setInviteLoading(true);
       setError("");
 
       await researcherApi.inviteParticipant(studyId, email);
+
+      const usageData = await researcherApi.getOrganizationUsage();
+      setUsage(usageData);
 
       const data = await researcherApi.getParticipants(studyId);
       const participantList = Array.isArray(data)
@@ -253,11 +293,19 @@ export default function ParticipantsPage() {
       setParticipants(participantList);
       setSearchTerm("");
     } catch (err) {
-      setError(
-        err?.response?.data?.message ||
-          err?.message ||
-          "Failed to invite participant."
-      );
+      const code = err?.response?.data?.code;
+      const message = err?.response?.data?.message;
+
+      if (code === "PARTICIPANT_LIMIT_REACHED") {
+        setError(
+          message || "You have reached your monthly participant limit."
+        );
+      } else {
+        setError(
+          message || err?.message || "Failed to invite participant."
+        );
+      }
+
       throw err;
     } finally {
       setInviteLoading(false);
@@ -285,7 +333,7 @@ export default function ParticipantsPage() {
       <section style={styles.card}>
         <div style={styles.studyHeader}>
           <div>
-            <h2 style={styles.sectionTitle}>Selected Study</h2>
+            <h2 style={styles.sectionTitle}>Selected Protocol</h2>
           </div>
 
           {selectedStudy && (
@@ -298,17 +346,16 @@ export default function ParticipantsPage() {
 
         {!studiesLoading && studies.length === 0 ? (
           <div style={styles.emptyState}>
-            <p style={styles.emptyTitle}>No studies yet</p>
+            <p style={styles.emptyTitle}>No protocols yet</p>
             <p style={styles.emptySubtitle}>
-              Create your first study protocol to begin inviting participants and
-              collecting data.
+              Create your first research protocol to begin recruiting participants and collecting assessment data remotely.
             </p>
             <button
               type="button"
               style={styles.primaryButton}
               onClick={() => (window.location.href = "/researcher/studies/new")}
             >
-              Create First Study
+              Create First Protocol
             </button>
           </div>
         ) : (
@@ -364,10 +411,19 @@ export default function ParticipantsPage() {
         )}
       </section>
 
+      {usageLoading && (
+        <p style={styles.muted}>Loading usage information...</p>
+      )}
+
       <InviteParticipantModal
         studyId={selectedStudyId}
         loading={inviteLoading}
-        disabled={!selectedStudy}
+        disabled={!selectedStudy || participantLimitReached}
+        disabledMessage={
+          participantLimitReached
+            ? "You have reached your monthly participant limit for this plan."
+            : ""
+        }
         onInvite={handleInvite}
       />
 

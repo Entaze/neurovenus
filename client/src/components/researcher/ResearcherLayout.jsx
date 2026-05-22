@@ -1,12 +1,12 @@
 // src/components/researcher/ResearcherLayout.jsx
 
 import { Link, useLocation, useNavigate } from "react-router-dom";
-import { FolderOpen, Users, Download } from "lucide-react";
+import { FolderOpen, Users, Download, UserPlus } from "lucide-react";
 
 import ResearcherTopBar from "./ResearcherTopBar";
 import { useResearcherAuth } from "../../hooks/useResearcherAuth";
 
-const navItems = [
+const baseNavItems = [
   {
     label: "Studies",
     path: "/researcher/studies",
@@ -40,9 +40,32 @@ export default function ResearcherLayout({ children }) {
   };
 
   const organization = {
-    name: researcher?.institution || "Pilot Workspace Org",
-    plan: researcher?.plan || "pilot",
+    name:
+      researcher?.organizationName ||
+      researcher?.institution ||
+      "Research Workspace",
+    plan:
+      researcher?.organizationPlan ||
+      researcher?.plan ||
+      "standard",
   };
+
+  const canManageResearchers =
+    ["pilot", "institutional", "custom"].includes(organization.plan) &&
+    ["owner", "admin"].includes(researcher?.role);
+
+  const visibleNavItems = canManageResearchers
+    ? [
+        baseNavItems[0],
+        baseNavItems[1],
+        {
+          label: "Researchers",
+          path: "/researcher/researchers",
+          icon: UserPlus,
+        },
+        baseNavItems[2],
+      ]
+    : baseNavItems;
 
   return (
     <div style={styles.wrapper}>
@@ -61,7 +84,7 @@ export default function ResearcherLayout({ children }) {
         </div>
 
         <nav style={styles.nav}>
-          {navItems.map((item) => {
+          {visibleNavItems.map((item) => {
             const active =
               location.pathname === item.path ||
               location.pathname.startsWith(`${item.path}/`);

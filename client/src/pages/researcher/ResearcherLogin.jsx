@@ -254,15 +254,27 @@ export default function ResearcherLogin() {
             <span style={styles.dividerLine} />
           </div>
 
-          <button type="button" style={styles.secondaryButton}>
-            Sign in with SSO
+          <button
+            type="button"
+            style={{
+              ...styles.secondaryButton,
+              ...styles.secondaryButtonDisabled,
+            }}
+            disabled
+          >
+            SSO coming soon
           </button>
 
           <p style={styles.helpText}>
             Need access?{" "}
             <span style={styles.helpLink}>
-              Contact your study administrator.
+              Ask your workspace owner to invite you.
             </span>
+          </p>
+
+          <p style={styles.inviteHelpText}>
+            Have an invitation? Open the invite link from your email to set up your
+            account.
           </p>
         </form>
       </section>
@@ -621,5 +633,18 @@ const styles = {
     color: "#7f8ca3",
     fontSize: 12,
     flexWrap: "wrap",
+  },
+
+  secondaryButtonDisabled: {
+    opacity: 0.55,
+    cursor: "not-allowed",
+  },
+
+  inviteHelpText: {
+    margin: "8px 0 0",
+    textAlign: "center",
+    color: "#7f8ca3",
+    fontSize: 12,
+    lineHeight: 1.6,
   },
 };

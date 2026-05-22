@@ -174,14 +174,13 @@ export default function ExportsPage() {
     <ResearcherLayout>
       <h1 style={styles.title}>Exports</h1>
       <p style={styles.subtitle}>
-        Download study, participant, session, and assessment-level data for
-        analysis.
+        Export participant, session, and assessment data for statistical analysis.
       </p>
 
       {error && <div style={styles.error}>{error}</div>}
 
       <section style={styles.card}>
-        <h2 style={styles.sectionTitle}>Select Study</h2>
+        <h2 style={styles.sectionTitle}>Select Protocol</h2>
 
         <StudySelector
           studies={studies}
@@ -221,7 +220,7 @@ export default function ExportsPage() {
             )}
           </div>
         ) : (
-          <p style={styles.muted}>Select a study to enable exports.</p>
+          <p style={styles.muted}>Select a protocol to export participant and assessment data.</p>
         )}
       </section>
 
@@ -263,11 +262,10 @@ export default function ExportsPage() {
       {selectedParticipantId && (
         <>
           <section style={styles.card}>
-            <h2 style={styles.sectionTitle}>Participant Full Export</h2>
+            <h2 style={styles.sectionTitle}>Full Participant Dataset</h2>
 
             <p style={styles.cardText}>
-              Export all sessions, assessments, summaries, and trial-level data for
-              the selected participant.
+              Export an analysis-ready dataset containing sessions, assessments, scoring outputs, and trial-level responses.
             </p>
 
             <ExportButton
@@ -279,7 +277,7 @@ export default function ExportsPage() {
           </section>
 
           <section style={styles.card}>
-            <h2 style={styles.sectionTitle}>Session Exports</h2>
+            <h2 style={styles.sectionTitle}>Session Datasets</h2>
 
             <p style={styles.cardText}>
               Export a single session for the selected participant.

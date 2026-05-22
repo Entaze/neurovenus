@@ -1,12 +1,7 @@
-// src/components/researcher/ResearcherTopBar.jsx
-
 import { useState, useRef } from "react";
 import {
   CircleHelp,
-  CreditCard,
-  UserPlus,
-  Bell,
-  Grid3X3,
+  // CreditCard,
   ChevronDown,
 } from "lucide-react";
 import AccountMenu from "./AccountMenu";
@@ -17,36 +12,8 @@ const toolbarItems = [
     icon: CircleHelp,
     label: "Support",
     onClick: () =>
-      window.open("/help", "_blank", "noopener,noreferrer"),
-  },
-  {
-    icon: CreditCard,
-    label: "Billing",
-    onClick: () =>
-      window.open("/billing", "_blank", "noopener,noreferrer"),
-  },
-  {
-    icon: UserPlus,
-    label: "Team Members",
-    onClick: () =>
-      window.open("/team", "_blank", "noopener,noreferrer"),
-  },
-  {
-    icon: Bell,
-    label: "Notifications",
-    onClick: () =>
       window.open(
-        "/notifications",
-        "_blank",
-        "noopener,noreferrer"
-      ),
-  },
-  {
-    icon: Grid3X3,
-    label: "Organization",
-    onClick: () =>
-      window.open(
-        "/organization",
+        "/researcher/help",
         "_blank",
         "noopener,noreferrer"
       ),
@@ -100,16 +67,30 @@ function normalizeUser(user = {}) {
 }
 
 function normalizeOrganization(user = {}, organization = {}) {
-  const plan = organization.plan || user.plan || "pilot";
+  const plan =
+    organization.plan ||
+    user.organizationPlan ||
+    user.plan ||
+    "standard";
+
+  const isCollaborativeWorkspace = [
+    "pilot",
+    "institutional",
+    "custom",
+  ].includes(plan);
 
   return {
-    name:
-      organization.name ||
-      user.organizationName ||
-      user.institution ||
-      "Pilot Workspace Org",
+    name: isCollaborativeWorkspace
+      ? organization.name ||
+        user.organizationName ||
+        user.institution ||
+        "Research Workspace"
+      : "Independent Researcher",
+
     plan,
+
     planLabel: formatPlan(plan),
+
     accessStatus:
       organization.accessStatus ||
       user.accessStatus ||
@@ -130,6 +111,8 @@ export default function ResearcherTopBar({
     normalizedUser,
     organization
   );
+
+  const visibleToolbarItems = toolbarItems;
 
   const initial = getInitialFromName(normalizedUser.name);
 
@@ -158,7 +141,7 @@ export default function ResearcherTopBar({
       </div>
 
       <div style={styles.right}>
-        {toolbarItems.map((item) => {
+        {visibleToolbarItems.map((item) => {
           const Icon = item.icon;
 
           return (

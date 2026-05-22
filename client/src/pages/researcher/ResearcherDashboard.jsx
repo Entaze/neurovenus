@@ -25,6 +25,8 @@ export default function ResearcherDashboard() {
   const [participantsLoading, setParticipantsLoading] = useState(false);
   const [inviteLoading, setInviteLoading] = useState(false);
   const [error, setError] = useState("");
+  const [usage, setUsage] = useState(null);
+  const [usageLoading, setUsageLoading] = useState(true);
 
   const selectedStudy = useMemo(() => {
     return studies.find((study) => study._id === selectedStudyId);
@@ -79,6 +81,34 @@ export default function ResearcherDashboard() {
   }, []);
 
   useEffect(() => {
+    let ignore = false;
+
+    async function fetchUsage() {
+      try {
+        setUsageLoading(true);
+
+        const data = await researcherApi.getOrganizationUsage();
+
+        if (!ignore) {
+          setUsage(data);
+        }
+      } catch (err) {
+        console.error("Failed to load organization usage:", err);
+      } finally {
+        if (!ignore) {
+          setUsageLoading(false);
+        }
+      }
+    }
+
+    fetchUsage();
+
+    return () => {
+      ignore = true;
+    };
+  }, []);
+
+  useEffect(() => {
     if (!selectedStudyId) return;
 
     let ignore = false;
@@ -122,6 +152,10 @@ export default function ResearcherDashboard() {
 
       await researcherApi.inviteParticipant(studyId, email);
 
+      // Refresh usage after successful invite
+      const usageData = await researcherApi.getOrganizationUsage();
+      setUsage(usageData);
+
       const data = await researcherApi.getParticipants(studyId);
       const participantList = Array.isArray(data)
         ? data
@@ -129,7 +163,15 @@ export default function ResearcherDashboard() {
 
       setParticipants(participantList);
     } catch (err) {
-      setError(err?.message || "Failed to invite participant.");
+      const code = err?.response?.data?.code;
+      const message = err?.response?.data?.message;
+
+      if (code === "PARTICIPANT_LIMIT_REACHED") {
+        setError(message || "You have reached your monthly participant limit.");
+      } else {
+        setError(message || err?.message || "Failed to invite participant.");
+      }
+
       throw err;
     } finally {
       setInviteLoading(false);
@@ -158,6 +200,48 @@ export default function ResearcherDashboard() {
       </div>
 
       {error && <div style={styles.error}>{error}</div>}
+
+      <section style={styles.card}>
+        <h2 style={styles.sectionTitle}>Plan Usage</h2>
+
+        {usageLoading ? (
+          <p style={styles.muted}>Loading usage metrics...</p>
+        ) : usage ? (
+          <div style={styles.usageGrid}>
+            <div style={styles.usageItem}>
+              <span style={styles.usageLabel}>Plan</span>
+              <span style={styles.usageValue}>
+                {usage.organization?.plan?.toUpperCase()}
+              </span>
+            </div>
+
+            <div style={styles.usageItem}>
+              <span style={styles.usageLabel}>Seats</span>
+              <span style={styles.usageValue}>
+                {usage.usage.seatsUsed} / {usage.limits.maxSeats}
+              </span>
+            </div>
+
+            <div style={styles.usageItem}>
+              <span style={styles.usageLabel}>Active Studies</span>
+              <span style={styles.usageValue}>
+                {usage.usage.activeStudiesUsed} /{" "}
+                {usage.limits.maxActiveStudies}
+              </span>
+            </div>
+
+            <div style={styles.usageItem}>
+              <span style={styles.usageLabel}>Participants This Month</span>
+              <span style={styles.usageValue}>
+                {usage.usage.participantsThisMonth} /{" "}
+                {usage.limits.maxParticipantsPerMonth}
+              </span>
+            </div>
+          </div>
+        ) : (
+          <p style={styles.muted}>Usage information unavailable.</p>
+        )}
+      </section>
 
       <section style={styles.card}>
         <h2 style={styles.sectionTitle}>Current Study</h2>
@@ -311,5 +395,33 @@ const styles = {
     border: "1px solid rgba(248,113,113,0.28)",
     color: "#fecaca",
     fontSize: 14,
+  },
+
+  usageGrid: {
+    display: "grid",
+    gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))",
+    gap: 16,
+  },
+
+  usageItem: {
+    padding: 18,
+    borderRadius: 14,
+    background: "rgba(255,255,255,0.035)",
+    border: "1px solid rgba(255,255,255,0.08)",
+  },
+
+  usageLabel: {
+    display: "block",
+    fontSize: 12,
+    color: "#94a3b8",
+    marginBottom: 8,
+    textTransform: "uppercase",
+    letterSpacing: "0.06em",
+  },
+
+  usageValue: {
+    fontSize: 20,
+    fontWeight: 700,
+    color: "#ffffff",
   },
 };

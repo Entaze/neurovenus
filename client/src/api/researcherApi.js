@@ -6,6 +6,11 @@ export const researcherApi = {
     return data;
   },
 
+  async getOrganizationUsage() {
+    const { data } = await api.get("/organization/usage");
+    return data;
+  },
+
   async getStudy(studyId) {
     const { data } = await api.get(`/studies/${studyId}`);
     return data;
@@ -27,6 +32,16 @@ export const researcherApi = {
       email,
     });
 
+    return data;
+  },
+
+  async getResearchers() {
+    const { data } = await api.get("/researchers");
+    return data;
+  },
+
+  async inviteResearcher(email) {
+    const { data } = await api.post("/researchers/invite", { email });
     return data;
   },
 

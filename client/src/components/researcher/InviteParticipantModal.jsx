@@ -1,5 +1,3 @@
-// src/components/researcher/InviteParticipantModal.jsx
-
 import { useState } from "react";
 
 const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -7,6 +5,7 @@ const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 export default function InviteParticipantModal({
   onInvite,
   disabled = false,
+  disabledMessage = "",
   loading = false,
   studyId,
 }) {
@@ -20,7 +19,9 @@ export default function InviteParticipantModal({
     setError("");
 
     if (isDisabled) {
-      setError("Create and select a study before inviting participants.");
+      setError(
+        disabledMessage || "Create and select a study before inviting participants."
+      );
       return;
     }
 
@@ -60,9 +61,13 @@ export default function InviteParticipantModal({
 
       {isDisabled && !loading && (
         <div style={styles.emptyState}>
-          <p style={styles.emptyTitle}>Create and select a study first.</p>
+          <p style={styles.emptyTitle}>
+            {disabledMessage || "Create and select a protocol before inviting participants."}
+          </p>
           <p style={styles.emptySubtitle}>
-            You can invite participants once a study protocol exists.
+            {disabledMessage
+              ? "Upgrade your plan or wait until your monthly allowance resets."
+              : "You can invite participants once a study protocol exists."}
           </p>
         </div>
       )}

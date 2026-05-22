@@ -10,6 +10,8 @@ export default function StudiesPage() {
   const [studies, setStudies] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [usage, setUsage] = useState(null);
+  const [, setUsageLoading] = useState(true);
 
   useEffect(() => {
     let ignore = false;
@@ -45,6 +47,34 @@ export default function StudiesPage() {
     };
   }, []);
 
+  useEffect(() => {
+    let ignore = false;
+
+    async function fetchUsage() {
+      try {
+        setUsageLoading(true);
+
+        const data = await researcherApi.getOrganizationUsage();
+
+        if (!ignore) {
+          setUsage(data);
+        }
+      } catch (err) {
+        console.error("Failed to load organization usage:", err);
+      } finally {
+        if (!ignore) {
+          setUsageLoading(false);
+        }
+      }
+    }
+
+    fetchUsage();
+
+    return () => {
+      ignore = true;
+    };
+  }, []);
+
   // Dashboard metrics
   const activeStudies = studies.length;
 
@@ -67,6 +97,14 @@ export default function StudiesPage() {
 
   const latestStudy = studies[0]?.title || "None";
 
+  const isUnlimitedPlan = ["institutional", "custom"].includes(
+    usage?.organization?.plan
+  );
+
+  const activeStudyLimitReached = !isUnlimitedPlan &&
+    usage?.usage?.activeStudiesUsed >=
+    usage?.limits?.maxActiveStudies;
+
   return (
     <ResearcherLayout>
       <div style={styles.header}>
@@ -84,10 +122,20 @@ export default function StudiesPage() {
         <button
           type="button"
           onClick={() => navigate("/researcher/studies/new")}
-          style={styles.primaryButton}
+          disabled={activeStudyLimitReached}
+          style={{
+            ...styles.primaryButton,
+            ...(activeStudyLimitReached ? styles.buttonDisabled : {}),
+          }}
         >
-          New Study
+          New Protocol
         </button>
+
+        {activeStudyLimitReached && (
+          <p style={styles.limitMessage}>
+            You have reached your active study limit for this plan.
+          </p>
+        )}
       </div>
 
       {/* Stats */}
@@ -130,20 +178,58 @@ export default function StudiesPage() {
           <p style={styles.muted}>Loading studies...</p>
         ) : studies.length === 0 ? (
           <div style={styles.emptyState}>
-            <h3 style={styles.emptyTitle}>No studies yet</h3>
+            <p style={styles.emptyEyebrow}>WELCOME TO NEUROVENUS</p>
+
+            <h3 style={styles.emptyTitle}>
+              Create your first research protocol
+            </h3>
+
             <p style={styles.emptySubtitle}>
-              Create your first study protocol to begin inviting participants.
+              Neurovenus helps researchers design structured assessment workflows,
+              recruit participants remotely, and export analysis-ready datasets.
             </p>
+
+            <div style={styles.workflowCard}>
+              <p style={styles.workflowTitle}>
+                Most researchers begin by:
+              </p>
+
+              <div style={styles.workflowList}>
+                <div style={styles.workflowStep}>
+                  <span style={styles.workflowNumber}>1</span>
+                  <span>Create a protocol</span>
+                </div>
+
+                <div style={styles.workflowStep}>
+                  <span style={styles.workflowNumber}>2</span>
+                  <span>Add sessions and assessments</span>
+                </div>
+
+                <div style={styles.workflowStep}>
+                  <span style={styles.workflowNumber}>3</span>
+                  <span>Recruit participants remotely</span>
+                </div>
+
+                <div style={styles.workflowStep}>
+                  <span style={styles.workflowNumber}>4</span>
+                  <span>Export analysis-ready data</span>
+                </div>
+              </div>
+            </div>
 
             <button
               type="button"
               onClick={() => navigate("/researcher/studies/new")}
-              style={styles.primaryButton}
+              disabled={activeStudyLimitReached}
+              style={{
+                ...styles.primaryButton,
+                ...(activeStudyLimitReached ? styles.buttonDisabled : {}),
+              }}
             >
-              Create First Study
+              Create First Protocol
             </button>
           </div>
-        ) : (
+          ) : (
           <div style={styles.grid}>
             {studies.map((study) => (
               <div key={study._id} style={styles.studyCard}>
@@ -323,5 +409,75 @@ const styles = {
     fontSize: 13,
     lineHeight: 1.6,
     maxWidth: 760,
+  },
+
+  buttonDisabled: {
+    opacity: 0.55,
+    cursor: "not-allowed",
+  },
+
+  limitMessage: {
+    marginTop: 8,
+    marginBottom: 0,
+    color: "#fca5a5",
+    fontSize: 13,
+  },
+
+  emptyEyebrow: {
+    margin: 0,
+    marginBottom: 14,
+    color: "#60a5fa",
+    fontSize: 11,
+    fontWeight: 800,
+    letterSpacing: "0.18em",
+    textTransform: "uppercase",
+  },
+
+  workflowCard: {
+    marginTop: 24,
+    marginBottom: 26,
+    padding: 18,
+    borderRadius: 14,
+    background: "rgba(15,23,42,0.55)",
+    border: "1px solid rgba(148,163,184,0.12)",
+    textAlign: "left",
+    maxWidth: 520,
+    marginInline: "auto",
+  },
+
+  workflowTitle: {
+    margin: 0,
+    marginBottom: 14,
+    color: "#e2e8f0",
+    fontSize: 13,
+    fontWeight: 700,
+  },
+
+  workflowList: {
+    display: "flex",
+    flexDirection: "column",
+    gap: 12,
+  },
+
+  workflowStep: {
+    display: "flex",
+    alignItems: "center",
+    gap: 12,
+    color: "#cbd5e1",
+    fontSize: 14,
+  },
+
+  workflowNumber: {
+    width: 24,
+    height: 24,
+    borderRadius: 999,
+    background: "rgba(59,130,246,0.18)",
+    color: "#93c5fd",
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    fontSize: 12,
+    fontWeight: 800,
+    flexShrink: 0,
   },
 };

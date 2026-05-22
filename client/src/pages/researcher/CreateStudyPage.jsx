@@ -61,11 +61,18 @@ export default function CreateStudyPage() {
 
       navigate(studyId ? `/researcher/studies/${studyId}` : "/researcher/studies");
     } catch (err) {
-      setError(
-        err?.response?.data?.message ||
-          err?.message ||
-          "Failed to create study."
-      );
+      const code = err?.response?.data?.code;
+      const message = err?.response?.data?.message;
+
+      if (code === "ACTIVE_STUDY_LIMIT_REACHED") {
+        setError(
+          message || "You have reached your active study limit for this plan."
+        );
+      } else {
+        setError(
+          message || err?.message || "Failed to create study."
+        );
+      }
     } finally {
       setSaving(false);
     }
@@ -134,7 +141,14 @@ export default function CreateStudyPage() {
               Cancel
             </button>
 
-            <button type="submit" disabled={saving} style={styles.primaryButton}>
+            <button
+              type="submit"
+              disabled={saving}
+              style={{
+                ...styles.primaryButton,
+                ...(saving ? styles.buttonDisabled : {}),
+              }}
+            >
               {saving ? "Creating Study..." : "Create Study"}
             </button>
           </div>
@@ -300,5 +314,10 @@ const styles = {
     minHeight: 56,
     display: "flex",
     alignItems: "center",
+  },
+
+  buttonDisabled: {
+    opacity: 0.55,
+    cursor: "not-allowed",
   },
 };

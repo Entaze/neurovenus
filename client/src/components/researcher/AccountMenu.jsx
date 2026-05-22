@@ -73,8 +73,27 @@ export default function AccountMenu({
 
   const displayName = user?.name || "Researcher";
   const email = user?.email || "";
-  const orgName = organization?.name || user?.institution || "Pilot Workspace Org";
-  const plan = formatPlan(organization?.plan || user?.plan || "pilot");
+  const rawPlan =
+    organization?.plan ||
+    user?.organizationPlan ||
+    user?.plan ||
+    "standard";
+
+  const plan = formatPlan(rawPlan);
+
+  const isCollaborativeWorkspace = [
+    "pilot",
+    "institutional",
+    "custom",
+  ].includes(rawPlan);
+
+  const orgName = isCollaborativeWorkspace
+    ? organization?.name ||
+      user?.organizationName ||
+      user?.institution ||
+      "Research Workspace"
+    : user?.institution || "Independent Researcher";
+
   const initial = getInitialFromName(displayName);
 
   const handleOrganization = () => {
@@ -125,10 +144,16 @@ export default function AccountMenu({
 
       <div style={styles.divider} />
 
-      <button
-        type="button"
+      <div
         className="account-menu-item"
-        onClick={handleOrganization}
+        style={{
+          cursor: isCollaborativeWorkspace ? "pointer" : "default",
+        }}
+        onClick={
+          isCollaborativeWorkspace
+            ? handleOrganization
+            : undefined
+        }
       >
         <Building2 size={18} strokeWidth={1.8} style={styles.menuIcon} />
 
@@ -136,11 +161,15 @@ export default function AccountMenu({
           <div style={styles.menuLabel}>{orgName}</div>
 
           <div style={styles.orgMetaRow}>
-            <span style={styles.menuSubtitle}>{plan} workspace</span>
+            <span style={styles.menuSubtitle}>
+              {isCollaborativeWorkspace
+                ? `${plan} workspace`
+                : `${plan} plan`}
+            </span>
             <span style={styles.planBadge}>{plan}</span>
           </div>
         </div>
-      </button>
+      </div>
 
       <div style={styles.divider} />
 

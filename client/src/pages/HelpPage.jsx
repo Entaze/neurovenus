@@ -57,7 +57,7 @@ export default function HelpPage() {
         <aside style={styles.sidebar}>
           <div style={styles.sidebarHeader}>
             <BookOpen size={18} />
-            <span>Documentation</span>
+            <span>Help Center</span>
           </div>
 
           <div style={styles.articleList}>

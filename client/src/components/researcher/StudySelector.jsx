@@ -20,7 +20,7 @@ export default function StudySelector({
         }}
       >
         <option value="">
-          {loading ? "Loading studies..." : "Select a study"}
+          {loading ? "Loading studies..." : "Select a protocol"}
         </option>
 
         {studies.map((study) => (
