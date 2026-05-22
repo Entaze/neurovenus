@@ -16,18 +16,27 @@ const app = express();
 
 const allowedOrigins = [
   "http://localhost:5173",
-  "https://cognitivevault-app.onrender.com",
+  "http://localhost:5174",
+
+  process.env.CLIENT_URL,
+  process.env.CLIENT_PREVIEW_URL,
+
+  "https://neurovenus-app.onrender.com",
   "https://admin.neurovenus.com",
   "https://participant.neurovenus.com",
   "https://app.neurovenus.com",
-];
+].filter(Boolean);
 
 app.use(
   cors({
     origin(origin, callback) {
       if (!origin) return callback(null, true);
 
-      if (allowedOrigins.includes(origin)) {
+      const isAllowed =
+        allowedOrigins.includes(origin) ||
+        origin.endsWith(".vercel.app");
+
+      if (isAllowed) {
         return callback(null, true);
       }
 
