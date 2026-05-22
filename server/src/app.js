@@ -17,10 +17,8 @@ const app = express();
 const allowedOrigins = [
   "http://localhost:5173",
   "http://localhost:5174",
-
   process.env.CLIENT_URL,
   process.env.CLIENT_PREVIEW_URL,
-
   "https://neurovenus-app.onrender.com",
   "https://admin.neurovenus.com",
   "https://participant.neurovenus.com",
