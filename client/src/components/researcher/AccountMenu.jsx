@@ -111,7 +111,12 @@ export default function AccountMenu({
   };
 
   const handleHelp = () => {
-    window.open("/help", "_blank", "noopener,noreferrer");
+    window.open(
+      "/researcher/help",
+      "_blank",
+      "noopener,noreferrer"
+    );
+
     onClose?.();
   };
 

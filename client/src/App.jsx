@@ -14,8 +14,8 @@ import ResearchersPage from "./pages/researcher/ResearchersPage";
 import CreateStudyPage from "./pages/researcher/CreateStudyPage";
 import StudyDetail from "./pages/researcher/StudyDetail";
 import StudiesPage from "./pages/researcher/StudiesPage";
-import FeedbackPage from "../src/components/researcher/FeedbackPage";
-import AdminFeedbackPage from "../src/components/admin/AdminFeedbackPage";
+import FeedbackPage from "./components/researcher/FeedbackPage";
+import AdminFeedbackPage from "./components/admin/AdminFeedbackPage";
 import UnauthorizedPage from "./pages/UnauthorizedPage";
 import HelpPage from "./pages/HelpPage";
 import OrganizationPage from "./pages/OrganizationPage";
@@ -98,11 +98,25 @@ function App() {
           }
         />
 
-        <Route path="/researcher/feedback" element={<FeedbackPage />} />
+        <Route
+          path="/researcher/feedback"
+          element={
+            <ResearcherProtectedRoute>
+              <FeedbackPage />
+            </ResearcherProtectedRoute>
+          }
+        />
         <Route path="/admin/feedback" element={<AdminFeedbackPage />} />
         <Route path="/unauthorized" element={<UnauthorizedPage />} />
         <Route path="/organization" element={<OrganizationPage />} />
-        <Route path="/help" element={<HelpPage />} />
+        <Route
+          path="/researcher/help"
+          element={
+            <ResearcherProtectedRoute>
+              <HelpPage />
+            </ResearcherProtectedRoute>
+          }
+        />
         <Route path="/team" element={<TeamPage />} />
         <Route path="/billing" element={<BillingPage />} />
         <Route path="/notifications" element={<NotificationsPage />} />
