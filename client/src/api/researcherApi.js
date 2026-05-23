@@ -1,5 +1,29 @@
 import api from "./client";
 
+function getExportFilename(response, fallbackFilename) {
+  const disposition = response.headers?.["content-disposition"];
+
+  if (!disposition) return fallbackFilename;
+
+  const match = disposition.match(/filename="?([^"]+)"?/);
+
+  return match?.[1] || fallbackFilename;
+}
+
+function downloadBlob(blob, filename) {
+  const downloadUrl = window.URL.createObjectURL(blob);
+
+  const link = document.createElement("a");
+  link.href = downloadUrl;
+  link.download = filename;
+
+  document.body.appendChild(link);
+  link.click();
+  link.remove();
+
+  window.URL.revokeObjectURL(downloadUrl);
+}
+
 export const researcherApi = {
   async getStudies() {
     const { data } = await api.get("/studies");
@@ -45,16 +69,6 @@ export const researcherApi = {
     return data;
   },
 
-  /**
-   * Build export URL with optional filters.
-   *
-   * Supported filters:
-   * - participantId
-   * - participantCode
-   * - sessionOrder
-   * - taskType
-   * - taskVersion
-   */
   getStudyExportUrl(studyId, filters = {}) {
     if (!studyId) return "";
 
@@ -63,39 +77,72 @@ export const researcherApi = {
     });
 
     Object.entries(filters).forEach(([key, value]) => {
-      if (
-        value !== null &&
-        value !== undefined &&
-        value !== ""
-      ) {
+      if (value !== null && value !== undefined && value !== "") {
         params.append(key, value);
       }
     });
 
-    return `${api.defaults.baseURL}/studies/${studyId}/export?${params.toString()}`;
+    return `/studies/${studyId}/export?${params.toString()}`;
   },
 
-  /**
-   * Convenience wrapper for participant export.
-   */
+  async downloadStudyExport(studyId, filters = {}, filename = "neurovenus-export.csv") {
+    if (!studyId) {
+      throw new Error("Study is required for export.");
+    }
+
+    const url = this.getStudyExportUrl(studyId, filters);
+
+    const response = await api.get(url, {
+      responseType: "blob",
+    });
+
+    const finalFilename = getExportFilename(response, filename);
+
+    downloadBlob(response.data, finalFilename);
+  },
+
+  async downloadParticipantExport(studyId, participantId, filename) {
+    return this.downloadStudyExport(
+      studyId,
+      { participantId },
+      filename || `neurovenus-participant-${participantId}.csv`
+    );
+  },
+
+  async downloadSessionExport(studyId, participantId, sessionOrder, filename) {
+    return this.downloadStudyExport(
+      studyId,
+      {
+        participantId,
+        sessionOrder,
+      },
+      filename || `neurovenus-participant-${participantId}-session-${sessionOrder}.csv`
+    );
+  },
+
+  async downloadAssessmentExport(studyId, participantId, taskType, filename) {
+    return this.downloadStudyExport(
+      studyId,
+      {
+        participantId,
+        taskType,
+      },
+      filename || `neurovenus-participant-${participantId}-${taskType}.csv`
+    );
+  },
+
   getParticipantExportUrl(studyId, participantId) {
     return this.getStudyExportUrl(studyId, {
       participantId,
     });
   },
 
-  /**
-   * Convenience wrapper for session export.
-   */
   getSessionExportUrl(studyId, sessionOrder) {
     return this.getStudyExportUrl(studyId, {
       sessionOrder,
     });
   },
 
-  /**
-   * Convenience wrapper for assessment export.
-   */
   getAssessmentExportUrl(studyId, taskType) {
     return this.getStudyExportUrl(studyId, {
       taskType,

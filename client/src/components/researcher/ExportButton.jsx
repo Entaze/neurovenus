@@ -1,26 +1,37 @@
-// src/components/researcher/ExportButton.jsx
+import { useState } from "react";
 
 export default function ExportButton({
-  href = "",
-  onClick,
-  loading = false,
+  onExport,
+  loading: externalLoading = false,
   label = "Export CSV",
   disabled = false,
 }) {
-  const isDisabled = loading || disabled || (!href && !onClick);
+  const [internalLoading, setInternalLoading] = useState(false);
 
-  const handleClick = () => {
+  const loading = externalLoading || internalLoading;
+
+  const isDisabled =
+    loading ||
+    disabled ||
+    !onExport;
+
+  const handleClick = async () => {
     if (isDisabled) return;
 
-    // Custom click handler takes precedence.
-    if (onClick) {
-      onClick();
-      return;
-    }
+    try {
+      setInternalLoading(true);
 
-    // Otherwise open export URL in a new tab.
-    if (href) {
-      window.open(href, "_blank", "noopener,noreferrer");
+      await onExport();
+    } catch (error) {
+      console.error("Export failed:", error);
+
+      alert(
+        error?.response?.data?.message ||
+          error?.message ||
+          "Export failed."
+      );
+    } finally {
+      setInternalLoading(false);
     }
   };
 

@@ -269,10 +269,16 @@ export default function ExportsPage() {
             </p>
 
             <ExportButton
-              href={researcherApi.getStudyExportUrl(selectedStudyId, {
-                participantId: selectedParticipantId,
-              })}
               label="Export Full Participant CSV"
+              onExport={() =>
+                researcherApi.downloadStudyExport(
+                  selectedStudyId,
+                  {
+                    participantId: selectedParticipantId,
+                  },
+                  `participant-${selectedParticipantId}.csv`
+                )
+              }
             />
           </section>
 
@@ -290,11 +296,17 @@ export default function ExportsPage() {
                 return (
                   <ExportButton
                     key={order}
-                    href={researcherApi.getStudyExportUrl(selectedStudyId, {
-                      participantId: selectedParticipantId,
-                      sessionOrder: order,
-                    })}
                     label={`Session ${order}`}
+                    onExport={() =>
+                      researcherApi.downloadStudyExport(
+                        selectedStudyId,
+                        {
+                          participantId: selectedParticipantId,
+                          sessionOrder: order,
+                        },
+                        `participant-${selectedParticipantId}-session-${order}.csv`
+                      )
+                    }
                   />
                 );
               })}
@@ -312,11 +324,17 @@ export default function ExportsPage() {
               {uniqueAssessments.map((assessment) => (
                 <ExportButton
                   key={assessment.key}
-                  href={researcherApi.getStudyExportUrl(selectedStudyId, {
-                    participantId: selectedParticipantId,
-                    taskType: assessment.key,
-                  })}
                   label={assessment.label}
+                  onExport={() =>
+                    researcherApi.downloadStudyExport(
+                      selectedStudyId,
+                      {
+                        participantId: selectedParticipantId,
+                        taskType: assessment.key,
+                      },
+                      `participant-${selectedParticipantId}-${assessment.key}.csv`
+                    )
+                  }
                 />
               ))}
             </div>
