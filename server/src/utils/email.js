@@ -310,7 +310,7 @@ const sendResearcherInviteEmail = async ({
         font-weight: 700;
         line-height: 1.5;
       ">
-        You're invited to join a Neurovenus research workspace.
+        You're invited to join ${organizationName || "an institution"} on Neurovenus.
       </p>
 
       <p style="
@@ -322,10 +322,20 @@ const sendResearcherInviteEmail = async ({
         <strong style="color:#ffffff;">
           ${inviterName || "A workspace owner"}
         </strong>
-        has invited you to collaborate on
+        has invited you to join
         <strong style="color:#ffffff;">
-          ${organizationName || "a Neurovenus workspace"}
-        </strong>.
+          ${organizationName || "their institution"}
+        </strong>
+        on Neurovenus.
+      </p>
+
+      <p style="
+        margin: 0 0 22px;
+        color: #cbd5e1;
+        font-size: 15px;
+        line-height: 1.8;
+      ">
+        Once your account is activated, you’ll be able to create and manage your own private cognitive and sleep research studies.
       </p>
 
       <div style="
@@ -335,17 +345,8 @@ const sendResearcherInviteEmail = async ({
         background: rgba(15, 23, 42, 0.88);
         border: 1px solid rgba(148, 163, 184, 0.14);
       ">
-        <p style="
-          margin: 0;
-          color: #94a3b8;
-          font-size: 14px;
-          line-height: 1.8;
-        ">
-          Neurovenus enables remote cognitive and sleep research with:
-        </p>
-
         <ul style="
-          margin: 14px 0 0;
+          margin: 0;
           padding-left: 18px;
           color: #cbd5e1;
           font-size: 14px;
