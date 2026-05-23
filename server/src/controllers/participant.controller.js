@@ -145,14 +145,14 @@ const inviteParticipant = async (req, res) => {
     const userId = req.user?._id || req.user?.id || req.user?.sub;
 
     const participantCountThisMonth =
-      await Participant.countDocuments({
-        organizationId,
-        createdBy: userId,
-        createdAt: {
-          $gte: startOfMonth,
-          $lt: startOfNextMonth,
-        },
-      });
+      const participantCountThisMonth =
+        await Participant.countDocuments({
+          organizationId,
+          createdAt: {
+            $gte: startOfMonth,
+            $lt: startOfNextMonth,
+          },
+        });
 
     if (participantCountThisMonth >= limits.maxParticipantsPerMonth) {
       return res.status(403).json({
