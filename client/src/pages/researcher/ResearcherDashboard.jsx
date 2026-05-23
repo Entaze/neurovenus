@@ -178,12 +178,13 @@ export default function ResearcherDashboard() {
     }
   };
 
-  const handleExportParticipant = (participant) => {
+  const handleExportParticipant = async (participant) => {
     if (!selectedStudyId || !participant?._id) return;
 
-    window.location.href = researcherApi.getParticipantExportUrl(
+    await researcherApi.downloadParticipantExport(
       selectedStudyId,
-      participant._id
+      participant._id,
+      `participant-${participant.participantCode || participant._id}.csv`
     );
   };
 
@@ -288,8 +289,14 @@ export default function ResearcherDashboard() {
 
           {selectedStudyId && (
             <ExportButton
-              href={researcherApi.getStudyExportUrl(selectedStudyId)}
               label="Export Study CSV"
+              onExport={() =>
+                researcherApi.downloadStudyExport(
+                  selectedStudyId,
+                  {},
+                  `study-${selectedStudyId}.csv`
+                )
+              }
             />
           )}
         </div>

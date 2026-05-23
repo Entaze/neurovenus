@@ -104,8 +104,14 @@ export default function StudyDetail() {
         </div>
 
         <ExportButton
-          href={researcherApi.getStudyExportUrl(studyId)}
           label="Export Study CSV"
+          onExport={() =>
+            researcherApi.downloadStudyExport(
+              studyId,
+              {},
+              `study-${studyId}.csv`
+            )
+          }
         />
       </div>
 

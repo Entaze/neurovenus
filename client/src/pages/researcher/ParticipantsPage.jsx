@@ -312,12 +312,13 @@ export default function ParticipantsPage() {
     }
   };
 
-  const handleExportParticipant = (participant) => {
+  const handleExportParticipant = async (participant) => {
     if (!selectedStudyId || !participant?._id) return;
 
-    window.location.href = researcherApi.getParticipantExportUrl(
+    await researcherApi.downloadParticipantExport(
       selectedStudyId,
-      participant._id
+      participant._id,
+      `participant-${participant.participantCode || participant._id}.csv`
     );
   };
 
