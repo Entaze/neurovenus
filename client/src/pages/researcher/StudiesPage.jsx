@@ -110,32 +110,36 @@ export default function StudiesPage() {
       <div style={styles.header}>
         <div>
           <h1 style={styles.title}>Studies</h1>
+
           <p style={styles.subtitle}>
             Create, manage, and monitor all of your research studies.
           </p>
+
           <p style={styles.infoNote}>
             Protocols are locked after creation to preserve data integrity.
             To make changes, create a new study version.
           </p>
         </div>
 
-        <button
-          type="button"
-          onClick={() => navigate("/researcher/studies/new")}
-          disabled={activeStudyLimitReached}
-          style={{
-            ...styles.primaryButton,
-            ...(activeStudyLimitReached ? styles.buttonDisabled : {}),
-          }}
-        >
-          New Protocol
-        </button>
+        <div style={styles.headerActions}>
+          <button
+            type="button"
+            onClick={() => navigate("/researcher/studies/new")}
+            disabled={activeStudyLimitReached}
+            style={{
+              ...styles.primaryButton,
+              ...(activeStudyLimitReached ? styles.buttonDisabled : {}),
+            }}
+          >
+            New Protocol
+          </button>
 
-        {activeStudyLimitReached && (
-          <p style={styles.limitMessage}>
-            You have reached your active study limit for this plan.
-          </p>
-        )}
+          {activeStudyLimitReached && (
+            <p style={styles.limitMessage}>
+              You have reached your active study limit for this plan.
+            </p>
+          )}
+        </div>
       </div>
 
       {/* Stats */}
@@ -417,10 +421,12 @@ const styles = {
   },
 
   limitMessage: {
-    marginTop: 8,
-    marginBottom: 0,
+    margin: 0,
     color: "#fca5a5",
     fontSize: 13,
+    textAlign: "right",
+    lineHeight: 1.4,
+    maxWidth: 320,
   },
 
   emptyEyebrow: {
@@ -479,5 +485,13 @@ const styles = {
     fontSize: 12,
     fontWeight: 800,
     flexShrink: 0,
+  },
+
+  headerActions: {
+    display: "flex",
+    flexDirection: "column",
+    alignItems: "flex-end",
+    gap: 8,
+    minWidth: 320,
   },
 };
