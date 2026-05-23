@@ -23,7 +23,6 @@ async function createStandardResearcher() {
         institution: "Independent Researcher",
         plan: "standard",
         status: "active",
-        maxSeats: 1,
         maxActiveStudies: 10,
         maxParticipantsPerMonth: 2000,
         isActive: true,

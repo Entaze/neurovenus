@@ -23,7 +23,6 @@ async function createPilotResearcher() {
         institution: "University of Cape Town",
         plan: "pilot",
         status: "trial",
-        maxSeats: 5,
         maxActiveStudies: 3,
         maxParticipantsPerMonth: 500,
         isActive: true,

@@ -1,54 +1,50 @@
 const PLAN_LIMITS = {
   pilot: {
-    maxSeats: 5,
-    maxActiveStudies: 20,
-    maxParticipantsPerMonth: 1000,
+    maxActiveStudies: 3,
+    maxParticipantsPerMonth: 500,
+    collaborationEnabled: false,
   },
 
   standard: {
-    maxSeats: 5,
     maxActiveStudies: 10,
     maxParticipantsPerMonth: 2000,
+    collaborationEnabled: false,
   },
 
   institutional: {
-    maxSeats: Infinity,
     maxActiveStudies: Infinity,
     maxParticipantsPerMonth: Infinity,
+    collaborationEnabled: true,
   },
 
   custom: {
-    maxSeats: Infinity,
     maxActiveStudies: Infinity,
     maxParticipantsPerMonth: Infinity,
+    collaborationEnabled: true,
   },
 };
 
-function getPlanLimits(organization) {
-  if (!organization) {
-    return PLAN_LIMITS.standard;
-  }
+const getPlanLimits = (organization) => {
+  const plan = organization?.plan || "standard";
 
-  const plan = organization.plan || "standard";
-  const baseLimits = PLAN_LIMITS[plan] || PLAN_LIMITS.standard;
+  const baseLimits =
+    PLAN_LIMITS[plan] || PLAN_LIMITS.standard;
 
   return {
-    maxSeats:
-      typeof organization.maxSeats === "number"
-        ? organization.maxSeats
-        : baseLimits.maxSeats,
-
     maxActiveStudies:
-      typeof organization.maxActiveStudies === "number"
+      typeof organization?.maxActiveStudies === "number"
         ? organization.maxActiveStudies
         : baseLimits.maxActiveStudies,
 
     maxParticipantsPerMonth:
-      typeof organization.maxParticipantsPerMonth === "number"
+      typeof organization?.maxParticipantsPerMonth === "number"
         ? organization.maxParticipantsPerMonth
         : baseLimits.maxParticipantsPerMonth,
+
+    collaborationEnabled:
+      baseLimits.collaborationEnabled,
   };
-}
+};
 
 module.exports = {
   PLAN_LIMITS,

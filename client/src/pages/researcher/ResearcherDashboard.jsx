@@ -216,9 +216,11 @@ export default function ResearcherDashboard() {
             </div>
 
             <div style={styles.usageItem}>
-              <span style={styles.usageLabel}>Seats</span>
+              <span style={styles.usageLabel}>Workspace</span>
               <span style={styles.usageValue}>
-                {usage.usage.seatsUsed} / {usage.limits.maxSeats}
+                {usage?.permissions?.collaborationEnabled
+                  ? "Collaboration enabled"
+                  : "Individual workspace"}
               </span>
             </div>
 

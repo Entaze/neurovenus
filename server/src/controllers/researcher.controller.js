@@ -22,7 +22,7 @@ const getResearchers = async (req, res) => {
 
     const researchers = await User.find({
       organizationId,
-      role: { $in: ["owner", "admin", "researcher", "viewer"] },
+      role: { $in: ["owner", "researcher"] },
     })
       .select("-passwordHash")
       .sort({ createdAt: 1 });
@@ -67,10 +67,10 @@ const inviteResearcher = async (req, res) => {
       isActive: true,
     });
 
-    if (!inviter || !["owner", "admin"].includes(inviter.role)) {
+    if (!inviter) {
       return res.status(403).json({
         success: false,
-        message: "Only workspace owners or admins can invite researchers.",
+        message: "Inviter account not found or inactive.",
       });
     }
 
@@ -83,29 +83,22 @@ const inviteResearcher = async (req, res) => {
       });
     }
 
-    const allowedPlans = ["pilot", "institutional", "custom"];
+    const limits = getPlanLimits(organization);
 
-    if (!allowedPlans.includes(organization.plan)) {
+    if (!limits.collaborationEnabled) {
       return res.status(403).json({
         success: false,
-        code: "RESEARCHER_INVITES_NOT_INCLUDED",
+        code: "RESEARCHER_INVITES_NOT_AVAILABLE",
         message:
-          "Researcher invitations are only available on Institutional plans.",
+          "Researcher collaboration is available on Institutional workspaces.",
       });
     }
 
-    const limits = getPlanLimits(organization);
-
-    const seatCount = await User.countDocuments({
-      organizationId,
-      isActive: true,
-    });
-
-    if (seatCount >= limits.maxSeats) {
+    if (inviter.role !== "owner") {
       return res.status(403).json({
         success: false,
-        code: "SEAT_LIMIT_REACHED",
-        message: `Your current plan allows up to ${limits.maxSeats} researcher seats.`,
+        code: "INSUFFICIENT_INVITE_PERMISSION",
+        message: "Only workspace owners can invite researchers.",
       });
     }
 
@@ -145,7 +138,6 @@ const inviteResearcher = async (req, res) => {
 
     const inviteLink = `${process.env.CLIENT_URL}/researcher/accept-invite?token=${rawToken}`;
 
-    // Email sending will be added next.
     console.log("Researcher invite link:", inviteLink);
 
     return res.status(201).json({
@@ -199,10 +191,7 @@ const acceptInvite = async (req, res) => {
     for (const user of pendingUsers) {
       if (!user.inviteTokenHash) continue;
 
-      const matches = await bcrypt.compare(
-        token,
-        user.inviteTokenHash
-      );
+      const matches = await bcrypt.compare(token, user.inviteTokenHash);
 
       if (matches) {
         invitedUser = user;
@@ -223,7 +212,6 @@ const acceptInvite = async (req, res) => {
     invitedUser.isActive = true;
     invitedUser.mustChangePassword = false;
     invitedUser.acceptedInviteAt = new Date();
-
     invitedUser.inviteTokenHash = "";
     invitedUser.inviteExpiresAt = null;
 

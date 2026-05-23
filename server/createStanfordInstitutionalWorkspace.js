@@ -23,7 +23,6 @@ async function createStanfordInstitutionalWorkspace() {
         institution: "Stanford University",
         plan: "institutional",
         status: "active",
-        maxSeats: null,
         maxActiveStudies: null,
         maxParticipantsPerMonth: null,
         isActive: true,

@@ -24,19 +24,21 @@ export default function ResearchersPage() {
   const [inviting, setInviting] = useState(false);
   const [error, setError] = useState("");
 
-  const seatsUsed = usage?.usage?.seatsUsed ?? researchers.filter((r) => r.isActive).length;
-  const maxSeats = usage?.limits?.maxSeats ?? 5;
-  const seatsRemaining = usage?.remaining?.seatsRemaining ?? Math.max(0, maxSeats - seatsUsed);
-
-  const plan = usage?.organization?.plan;
-
-  const isUnlimitedPlan = ["institutional", "custom"].includes(
-    plan
+  const collaborationEnabled = Boolean(
+    usage?.permissions?.collaborationEnabled
   );
 
-  const seatLimitReached =
-    !isUnlimitedPlan &&
-    seatsUsed >= maxSeats;
+  const canInviteResearchers = Boolean(
+    usage?.permissions?.canInviteResearchers
+  );
+
+  const workspaceLabel = collaborationEnabled
+    ? "Institutional Workspace"
+    : "Individual Workspace";
+
+  const workspaceDescription = collaborationEnabled
+    ? "Unlimited researcher collaboration enabled"
+    : "Single researcher access";
 
   const sortedResearchers = useMemo(() => {
     return [...researchers].sort((a, b) => {
@@ -89,6 +91,11 @@ export default function ResearchersPage() {
     setError("");
     setInviteLink("");
 
+    if (!canInviteResearchers) {
+      setError("Only workspace owners can invite researchers.");
+      return;
+    }
+
     const trimmedEmail = email.trim().toLowerCase();
 
     if (!trimmedEmail) {
@@ -98,11 +105,6 @@ export default function ResearchersPage() {
 
     if (!emailRegex.test(trimmedEmail)) {
       setError("Please enter a valid email address.");
-      return;
-    }
-
-    if (seatLimitReached) {
-      setError("You have reached your researcher seat limit for this plan.");
       return;
     }
 
@@ -119,8 +121,13 @@ export default function ResearchersPage() {
       const code = err?.response?.data?.code;
       const message = err?.response?.data?.message;
 
-      if (code === "SEAT_LIMIT_REACHED") {
-        setError(message || "You have reached your researcher seat limit.");
+      if (code === "RESEARCHER_INVITES_NOT_AVAILABLE") {
+        setError(
+          message ||
+            "Researcher collaboration is available on Institutional workspaces."
+        );
+      } else if (code === "INSUFFICIENT_INVITE_PERMISSION") {
+        setError(message || "Only workspace owners can invite researchers.");
       } else {
         setError(message || err?.message || "Failed to invite researcher.");
       }
@@ -133,64 +140,30 @@ export default function ResearchersPage() {
     <ResearcherLayout>
       <h1 style={styles.title}>Researchers</h1>
       <p style={styles.subtitle}>
-        Invite researchers and manage workspace access.
+        Manage workspace researchers and collaboration access.
       </p>
 
       {error && <div style={styles.error}>{error}</div>}
 
       <section style={styles.card}>
-        <h2 style={styles.sectionTitle}>Researcher Seats</h2>
+        <h2 style={styles.sectionTitle}>Workspace Access</h2>
 
-        <div style={styles.seatRow}>
+        <div style={styles.workspaceRow}>
           <div>
-            {isUnlimitedPlan ? (
-              <>
-                <p style={styles.seatValue}>
-                  Institutional Workspace
-                </p>
-
-                <p style={styles.muted}>
-                  Multi-researcher collaboration enabled
-                </p>
-              </>
-            ) : (
-              <>
-                <p style={styles.seatValue}>
-                  {seatsUsed} / {maxSeats}
-                </p>
-
-                <p style={styles.muted}>
-                  {seatsRemaining} seat{seatsRemaining === 1 ? "" : "s"} remaining
-                </p>
-              </>
-            )}
+            <p style={styles.workspaceValue}>{workspaceLabel}</p>
+            <p style={styles.muted}>{workspaceDescription}</p>
           </div>
 
-          <span
-            style={{
-              ...styles.badge,
-              ...(seatLimitReached ? styles.badgeDanger : {}),
-            }}
-          >
-            {
-              isUnlimitedPlan
-                ? "Institutional"
-                : seatLimitReached
-                  ? "Limit reached"
-                  : "Available"
-            }
+          <span style={styles.badge}>
+            {collaborationEnabled ? "Institutional" : "Individual"}
           </span>
         </div>
       </section>
 
-      <section style={styles.card}>
-        <h2 style={styles.sectionTitle}>Invite Researcher</h2>
+      {canInviteResearchers ? (
+        <section style={styles.card}>
+          <h2 style={styles.sectionTitle}>Invite Researcher</h2>
 
-        {seatLimitReached && !isUnlimitedPlan ? (
-          <p style={styles.muted}>
-            You have reached your researcher seat limit for this plan.
-          </p>
-        ) : (
           <form onSubmit={handleInvite} style={styles.form}>
             <input
               type="email"
@@ -212,15 +185,24 @@ export default function ResearchersPage() {
               {inviting ? "Sending..." : "Invite Researcher"}
             </button>
           </form>
-        )}
 
-        {inviteLink && (
-          <div style={styles.inviteBox}>
-            <p style={styles.inviteLabel}>Invite link</p>
-            <p style={styles.inviteLink}>{inviteLink}</p>
-          </div>
-        )}
-      </section>
+          {inviteLink && (
+            <div style={styles.inviteBox}>
+              <p style={styles.inviteLabel}>Invite link</p>
+              <p style={styles.inviteLink}>{inviteLink}</p>
+            </div>
+          )}
+        </section>
+      ) : (
+        <section style={styles.card}>
+          <h2 style={styles.sectionTitle}>Researcher Invitations</h2>
+          <p style={styles.muted}>
+            {collaborationEnabled
+              ? "Only workspace owners can invite researchers."
+              : "Researcher invitations are available on Institutional workspaces."}
+          </p>
+        </section>
+      )}
 
       <section style={styles.card}>
         <h2 style={styles.sectionTitle}>Workspace Researchers</h2>
@@ -291,14 +273,14 @@ const styles = {
     color: "#ffffff",
   },
 
-  seatRow: {
+  workspaceRow: {
     display: "flex",
     justifyContent: "space-between",
     alignItems: "center",
     gap: 16,
   },
 
-  seatValue: {
+  workspaceValue: {
     margin: 0,
     fontSize: 28,
     fontWeight: 900,
@@ -319,12 +301,6 @@ const styles = {
     color: "#86efac",
     fontSize: 12,
     fontWeight: 800,
-  },
-
-  badgeDanger: {
-    background: "rgba(248,113,113,0.12)",
-    border: "1px solid rgba(248,113,113,0.28)",
-    color: "#fecaca",
   },
 
   form: {

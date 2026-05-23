@@ -16,13 +16,13 @@ const {
 
 const JWT_SECRET = "test-secret";
 
-function createToken(user) {
+function createToken(user, organizationPlan = "standard") {
   return jwt.sign(
     {
       id: user._id,
       organizationId: user.organizationId,
       role: user.role,
-      organizationPlan: "standard",
+      organizationPlan,
     },
     JWT_SECRET,
     { expiresIn: "1h" }
@@ -35,6 +35,8 @@ describe("Neurovenus Privacy Architecture", () => {
   let janeToken;
   let sarahToken;
   let org;
+
+  process.env.CLIENT_URL = "http://localhost:5173";
 
   beforeAll(async () => {
     process.env.JWT_SECRET = JWT_SECRET;
@@ -50,7 +52,6 @@ describe("Neurovenus Privacy Architecture", () => {
       institution: "University of Cape Town",
       plan: "standard",
       status: "active",
-      maxSeats: 1,
       maxActiveStudies: 10,
       maxParticipantsPerMonth: 2000,
       isActive: true,
@@ -95,11 +96,7 @@ describe("Neurovenus Privacy Architecture", () => {
       organizationId: org._id,
       createdBy: jane._id,
       protocolVersion: "custom",
-      protocol: {
-        type: "custom",
-        version: "v1",
-        sessions: [],
-      },
+      protocol: { type: "custom", version: "v1", sessions: [] },
       sessions: [],
       active: true,
     });
@@ -110,11 +107,7 @@ describe("Neurovenus Privacy Architecture", () => {
       organizationId: org._id,
       createdBy: sarah._id,
       protocolVersion: "custom",
-      protocol: {
-        type: "custom",
-        version: "v1",
-        sessions: [],
-      },
+      protocol: { type: "custom", version: "v1", sessions: [] },
       sessions: [],
       active: true,
     });
@@ -143,11 +136,7 @@ describe("Neurovenus Privacy Architecture", () => {
       organizationId: org._id,
       createdBy: jane._id,
       protocolVersion: "custom",
-      protocol: {
-        type: "custom",
-        version: "v1",
-        sessions: [],
-      },
+      protocol: { type: "custom", version: "v1", sessions: [] },
       sessions: [],
       active: true,
     });
@@ -168,11 +157,7 @@ describe("Neurovenus Privacy Architecture", () => {
       organizationId: org._id,
       createdBy: jane._id,
       protocolVersion: "custom",
-      protocol: {
-        type: "custom",
-        version: "v1",
-        sessions: [],
-      },
+      protocol: { type: "custom", version: "v1", sessions: [] },
       sessions: [],
       active: true,
     });
@@ -203,11 +188,7 @@ describe("Neurovenus Privacy Architecture", () => {
       organizationId: org._id,
       createdBy: jane._id,
       protocolVersion: "custom",
-      protocol: {
-        type: "custom",
-        version: "v1",
-        sessions: [],
-      },
+      protocol: { type: "custom", version: "v1", sessions: [] },
       sessions: [],
       active: true,
     });
@@ -228,11 +209,7 @@ describe("Neurovenus Privacy Architecture", () => {
       organizationId: org._id,
       createdBy: sarah._id,
       protocolVersion: "custom",
-      protocol: {
-        type: "custom",
-        version: "v1",
-        sessions: [],
-      },
+      protocol: { type: "custom", version: "v1", sessions: [] },
       sessions: [],
       active: true,
     });
@@ -253,11 +230,7 @@ describe("Neurovenus Privacy Architecture", () => {
       organizationId: org._id,
       createdBy: sarah._id,
       protocolVersion: "custom",
-      protocol: {
-        type: "custom",
-        version: "v1",
-        sessions: [],
-      },
+      protocol: { type: "custom", version: "v1", sessions: [] },
       sessions: [],
       active: true,
     });
@@ -277,11 +250,7 @@ describe("Neurovenus Privacy Architecture", () => {
       organizationId: org._id,
       createdBy: jane._id,
       protocolVersion: "custom",
-      protocol: {
-        type: "custom",
-        version: "v1",
-        sessions: [],
-      },
+      protocol: { type: "custom", version: "v1", sessions: [] },
       sessions: [],
       active: true,
     });
@@ -289,9 +258,7 @@ describe("Neurovenus Privacy Architecture", () => {
     const response = await request(app)
       .patch(`/api/studies/${janeStudy._id}`)
       .set("Authorization", `Bearer ${sarahToken}`)
-      .send({
-        title: "Sarah Tried To Edit This",
-      });
+      .send({ title: "Sarah Tried To Edit This" });
 
     expect(response.status).toBe(404);
     expect(response.body.success).toBe(false);
@@ -308,11 +275,7 @@ describe("Neurovenus Privacy Architecture", () => {
       organizationId: org._id,
       createdBy: sarah._id,
       protocolVersion: "custom",
-      protocol: {
-        type: "custom",
-        version: "v1",
-        sessions: [],
-      },
+      protocol: { type: "custom", version: "v1", sessions: [] },
       sessions: [],
       active: true,
     });
@@ -327,20 +290,11 @@ describe("Neurovenus Privacy Architecture", () => {
 
     expect(response.status).toBe(200);
     expect(response.body.success).toBe(true);
-
-    expect(response.body.study.title).toBe(
-      "Sarah Updated Study"
-    );
-
-    expect(response.body.study.description).toBe(
-      "Updated description"
-    );
+    expect(response.body.study.title).toBe("Sarah Updated Study");
+    expect(response.body.study.description).toBe("Updated description");
 
     const updatedStudy = await Study.findById(sarahStudy._id);
-
-    expect(updatedStudy.title).toBe(
-      "Sarah Updated Study"
-    );
+    expect(updatedStudy.title).toBe("Sarah Updated Study");
   });
 
   test("researcher cannot invite participants into another researcher's study", async () => {
@@ -350,11 +304,7 @@ describe("Neurovenus Privacy Architecture", () => {
       organizationId: org._id,
       createdBy: jane._id,
       protocolVersion: "custom",
-      protocol: {
-        type: "custom",
-        version: "v1",
-        sessions: [],
-      },
+      protocol: { type: "custom", version: "v1", sessions: [] },
       sessions: [],
       active: true,
     });
@@ -368,12 +318,8 @@ describe("Neurovenus Privacy Architecture", () => {
       });
 
     expect(response.status).toBe(404);
-
     expect(response.body.success).toBe(false);
-
-    expect(response.body.message).toBe(
-      "Study not found"
-    );
+    expect(response.body.message).toBe("Study not found");
 
     const participantCount = await Participant.countDocuments({
       studyId: janeStudy._id,
@@ -390,11 +336,7 @@ describe("Neurovenus Privacy Architecture", () => {
         organizationId: org._id,
         createdBy: sarah._id,
         protocolVersion: "custom",
-        protocol: {
-          type: "custom",
-          version: "v1",
-          sessions: [],
-        },
+        protocol: { type: "custom", version: "v1", sessions: [] },
         sessions: [],
         active: true,
       });
@@ -407,19 +349,12 @@ describe("Neurovenus Privacy Architecture", () => {
         title: "Study 11",
         description: "Should fail",
         protocolVersion: "custom",
-        protocol: {
-          type: "custom",
-          version: "v1",
-          sessions: [],
-        },
+        protocol: { type: "custom", version: "v1", sessions: [] },
       });
 
     expect(response.status).toBe(403);
-
     expect(response.body.success).toBe(false);
-
     expect(response.body.code).toBe("ACTIVE_STUDY_LIMIT_REACHED");
-
     expect(response.body.message).toBe(
       "Your current plan allows up to 10 active studies."
     );
@@ -440,11 +375,7 @@ describe("Neurovenus Privacy Architecture", () => {
       organizationId: org._id,
       createdBy: sarah._id,
       protocolVersion: "custom",
-      protocol: {
-        type: "custom",
-        version: "v1",
-        sessions: [],
-      },
+      protocol: { type: "custom", version: "v1", sessions: [] },
       sessions: [],
       active: true,
     });
@@ -475,16 +406,9 @@ describe("Neurovenus Privacy Architecture", () => {
       });
 
     expect(response.status).toBe(403);
-
     expect(response.body.success).toBe(false);
-
-    expect(response.body.code).toBe(
-      "PARTICIPANT_LIMIT_REACHED"
-    );
-
-    expect(response.body.message).toContain(
-      "2000 participants"
-    );
+    expect(response.body.code).toBe("PARTICIPANT_LIMIT_REACHED");
+    expect(response.body.message).toContain("2000 participants");
 
     const participantCount = await Participant.countDocuments({
       organizationId: org._id,
@@ -503,15 +427,57 @@ describe("Neurovenus Privacy Architecture", () => {
       });
 
     expect(response.status).toBe(403);
-
     expect(response.body.success).toBe(false);
-
-    expect(response.body.code).toBe(
-      "RESEARCHER_INVITES_NOT_INCLUDED"
-    );
-
+    expect(response.body.code).toBe("RESEARCHER_INVITES_NOT_AVAILABLE");
     expect(response.body.message).toBe(
-      "Researcher invitations are only available on Institutional plans."
+      "Researcher collaboration is available on Institutional workspaces."
+    );
+  });
+
+  test("institutional researcher cannot invite other researchers", async () => {
+    org.plan = "institutional";
+    org.maxActiveStudies = null;
+    org.maxParticipantsPerMonth = null;
+    await org.save();
+
+    sarahToken = createToken(sarah, "institutional");
+
+    const response = await request(app)
+      .post("/api/researchers/invite")
+      .set("Authorization", `Bearer ${sarahToken}`)
+      .send({
+        email: "newresearcher@example.com",
+      });
+
+    expect(response.status).toBe(403);
+    expect(response.body.success).toBe(false);
+    expect(response.body.code).toBe("INSUFFICIENT_INVITE_PERMISSION");
+    expect(response.body.message).toBe(
+      "Only workspace owners can invite researchers."
+    );
+  });
+
+  test("institutional owner can invite researchers", async () => {
+    org.plan = "institutional";
+    org.maxActiveStudies = null;
+    org.maxParticipantsPerMonth = null;
+    await org.save();
+
+    janeToken = createToken(jane, "institutional");
+
+    const response = await request(app)
+      .post("/api/researchers/invite")
+      .set("Authorization", `Bearer ${janeToken}`)
+      .send({
+        email: "newresearcher@example.com",
+      });
+
+    expect(response.status).toBe(201);
+    expect(response.body.success).toBe(true);
+    expect(response.body.researcher.email).toBe("newresearcher@example.com");
+    expect(response.body.researcher.role).toBe("researcher");
+    expect(response.body.inviteLink).toContain(
+      "/researcher/accept-invite?token="
     );
   });
 });

@@ -44,11 +44,6 @@ const organizationSchema = new mongoose.Schema(
       index: true,
     },
 
-    maxSeats: {
-      type: Number,
-      default: 1,
-    },
-
     maxActiveStudies: {
       type: Number,
       default: 10,

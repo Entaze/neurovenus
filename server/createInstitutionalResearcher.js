@@ -23,7 +23,6 @@ async function createInstitutionalResearcher() {
         institution: "University of Cape Town",
         plan: "institutional",
         status: "active",
-        maxSeats: null,
         maxActiveStudies: null,
         maxParticipantsPerMonth: null,
         isActive: true,

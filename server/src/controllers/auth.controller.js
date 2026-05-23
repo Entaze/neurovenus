@@ -84,7 +84,6 @@ const login = async (req, res) => {
         organizationName: organization.name,
         organizationPlan: organization.plan,
         organizationStatus: organization.status,
-        organizationMaxSeats: organization.maxSeats,
         organizationMaxActiveStudies: organization.maxActiveStudies,
         organizationMaxParticipantsPerMonth:
           organization.maxParticipantsPerMonth,

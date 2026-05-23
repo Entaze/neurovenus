@@ -18,7 +18,6 @@ async function createUser() {
         institution: "Neurovenus",
         plan: "custom",
         status: "active",
-        maxSeats: 999,
         maxActiveStudies: 999,
         maxParticipantsPerMonth: 99999,
         isActive: true,

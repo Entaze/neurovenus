@@ -1,5 +1,4 @@
 const Organization = require("../models/Organization");
-const User = require("../models/User");
 const Study = require("../models/Study");
 const Participant = require("../models/Participant");
 const { getPlanLimits } = require("../utils/planLimits");
@@ -7,6 +6,7 @@ const { getPlanLimits } = require("../utils/planLimits");
 const getOrganizationUsage = async (req, res) => {
   try {
     const organizationId = req.user?.organizationId;
+    const userRole = req.user?.role;
 
     if (!organizationId) {
       return res.status(401).json({
@@ -33,16 +33,7 @@ const getOrganizationUsage = async (req, res) => {
     const startOfNextMonth = new Date(startOfMonth);
     startOfNextMonth.setMonth(startOfNextMonth.getMonth() + 1);
 
-    const [
-      seatsUsed,
-      activeStudiesUsed,
-      participantsThisMonth,
-    ] = await Promise.all([
-      User.countDocuments({
-        organizationId,
-        isActive: true,
-      }),
-
+    const [activeStudiesUsed, participantsThisMonth] = await Promise.all([
       Study.countDocuments({
         organizationId,
         active: true,
@@ -57,6 +48,10 @@ const getOrganizationUsage = async (req, res) => {
       }),
     ]);
 
+    const collaborationEnabled = Boolean(limits.collaborationEnabled);
+    const canInviteResearchers =
+      collaborationEnabled && userRole === "owner";
+
     return res.json({
       success: true,
 
@@ -66,42 +61,38 @@ const getOrganizationUsage = async (req, res) => {
         institution: organization.institution,
         plan: organization.plan,
         status: organization.status,
+        workspaceType: collaborationEnabled
+          ? "institutional"
+          : "individual",
+      },
+
+      permissions: {
+        collaborationEnabled,
+        canInviteResearchers,
       },
 
       limits: {
-        maxSeats: limits.maxSeats,
         maxActiveStudies: limits.maxActiveStudies,
-        maxParticipantsPerMonth:
-          limits.maxParticipantsPerMonth,
+        maxParticipantsPerMonth: limits.maxParticipantsPerMonth,
       },
 
       usage: {
-        seatsUsed,
         activeStudiesUsed,
         participantsThisMonth,
       },
 
       remaining: {
-        seatsRemaining:
-          limits.maxSeats === Infinity
-            ? null
-            : Math.max(0, limits.maxSeats - seatsUsed),
-
         activeStudiesRemaining:
           limits.maxActiveStudies === Infinity
             ? null
-            : Math.max(
-                0,
-                limits.maxActiveStudies - activeStudiesUsed
-              ),
+            : Math.max(0, limits.maxActiveStudies - activeStudiesUsed),
 
         participantsRemaining:
           limits.maxParticipantsPerMonth === Infinity
             ? null
             : Math.max(
                 0,
-                limits.maxParticipantsPerMonth -
-                  participantsThisMonth
+                limits.maxParticipantsPerMonth - participantsThisMonth
               ),
       },
     });
