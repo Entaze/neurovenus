@@ -60,16 +60,22 @@ export default function InviteParticipantModal({
       </p>
 
       {isDisabled && !loading && (
-        <div style={styles.emptyState}>
-          <p style={styles.emptyTitle}>
-            {disabledMessage || "Create and select a protocol before inviting participants."}
-          </p>
-          <p style={styles.emptySubtitle}>
-            {disabledMessage
-              ? "Upgrade your plan or wait until your monthly allowance resets."
-              : "You can invite participants once a study protocol exists."}
-          </p>
-        </div>
+        disabledMessage ? (
+          <div style={styles.limitPill}>
+            <span style={styles.limitIcon}>ⓘ</span>
+            <span>{disabledMessage}</span>
+          </div>
+        ) : (
+          <div style={styles.emptyState}>
+            <p style={styles.emptyTitle}>
+              Create and select a protocol before inviting participants.
+            </p>
+
+            <p style={styles.emptySubtitle}>
+              You can invite participants once a study protocol exists.
+            </p>
+          </div>
+        )
       )}
 
       <form onSubmit={handleSubmit} style={styles.form} noValidate>
@@ -208,5 +214,27 @@ const styles = {
     fontSize: 14,
     color: "#94a3b8",
     lineHeight: 1.6,
+  },
+
+  limitPill: {
+    display: "inline-flex",
+    alignItems: "center",
+    gap: 8,
+    marginTop: 4,
+    alignSelf: "flex-start",
+    marginBottom: 14,
+    padding: "8px 12px",
+    borderRadius: 999,
+    background: "rgba(245, 158, 11, 0.10)",
+    border: "1px solid rgba(245, 158, 11, 0.18)",
+    color: "#fcd34d",
+    fontSize: 12,
+    fontWeight: 700,
+    lineHeight: 1,
+  },
+
+  limitIcon: {
+    fontSize: 12,
+    opacity: 0.9,
   },
 };
