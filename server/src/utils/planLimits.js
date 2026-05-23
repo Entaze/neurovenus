@@ -7,7 +7,7 @@ const PLAN_LIMITS = {
 
   standard: {
     maxActiveStudies: 10,
-    maxParticipantsPerMonth: 2000,
+    maxParticipantsPerMonth: 6,
     collaborationEnabled: false,
   },
 
