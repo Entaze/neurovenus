@@ -293,6 +293,126 @@ ${inviteLink}
   });
 };
 
+const sendResearcherInviteEmail = async ({
+  to,
+  inviteLink,
+  organizationName,
+  inviterName,
+}) => {
+  const subject = `You're invited to join ${organizationName || "Neurovenus"}`;
+
+  const html = `
+    <div style="padding-top: 8px;">
+      <p style="
+        margin: 0 0 18px;
+        color: #e2e8f0;
+        font-size: 18px;
+        font-weight: 700;
+        line-height: 1.5;
+      ">
+        You're invited to join a Neurovenus research workspace.
+      </p>
+
+      <p style="
+        margin: 0 0 22px;
+        color: #cbd5e1;
+        font-size: 15px;
+        line-height: 1.8;
+      ">
+        <strong style="color:#ffffff;">
+          ${inviterName || "A workspace owner"}
+        </strong>
+        has invited you to collaborate on
+        <strong style="color:#ffffff;">
+          ${organizationName || "a Neurovenus workspace"}
+        </strong>.
+      </p>
+
+      <div style="
+        margin: 26px 0;
+        padding: 18px 20px;
+        border-radius: 18px;
+        background: rgba(15, 23, 42, 0.88);
+        border: 1px solid rgba(148, 163, 184, 0.14);
+      ">
+        <p style="
+          margin: 0;
+          color: #94a3b8;
+          font-size: 14px;
+          line-height: 1.8;
+        ">
+          Neurovenus enables remote cognitive and sleep research with:
+        </p>
+
+        <ul style="
+          margin: 14px 0 0;
+          padding-left: 18px;
+          color: #cbd5e1;
+          font-size: 14px;
+          line-height: 1.9;
+        ">
+          <li>Multi-session study management</li>
+          <li>Remote participant invitations</li>
+          <li>Cognitive & sleep assessments</li>
+          <li>Trial-level data capture</li>
+          <li>Analysis-ready CSV exports</li>
+        </ul>
+      </div>
+
+      <p style="
+        margin: 0 0 28px;
+        color: #cbd5e1;
+        font-size: 15px;
+        line-height: 1.8;
+      ">
+        Click below to activate your researcher account and join the workspace.
+      </p>
+
+      <a
+        href="${inviteLink}"
+        style="
+          display: inline-block;
+          padding: 14px 24px;
+          border-radius: 14px;
+          background: linear-gradient(90deg, #0ea5e9, #2563eb);
+          color: #ffffff;
+          text-decoration: none;
+          font-size: 15px;
+          font-weight: 800;
+          box-shadow: 0 12px 28px rgba(37, 99, 235, 0.25);
+        "
+      >
+        Accept Researcher Invite
+      </a>
+
+      <p style="
+        margin: 28px 0 0;
+        color: #94a3b8;
+        font-size: 13px;
+        line-height: 1.7;
+      ">
+        This invitation expires in 7 days.
+      </p>
+
+      <p style="
+        margin: 8px 0 0;
+        color: #67e8f9;
+        font-size: 13px;
+        line-height: 1.7;
+        word-break: break-all;
+      ">
+        ${inviteLink}
+      </p>
+    </div>
+  `;
+
+  return sendEmail({
+    to,
+    subject,
+    html,
+  });
+};
+
 const sendSessionReminderEmail = async ({
   to,
   participantCode,
@@ -344,4 +464,5 @@ module.exports = {
   sendEmail,
   sendParticipantInviteEmail,
   sendSessionReminderEmail,
+  sendResearcherInviteEmail,
 };

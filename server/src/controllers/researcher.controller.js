@@ -4,6 +4,9 @@ const bcrypt = require("bcryptjs");
 const User = require("../models/User");
 const Organization = require("../models/Organization");
 const { getPlanLimits } = require("../utils/planLimits");
+const {
+  sendResearcherInviteEmail,
+} = require("../utils/email");
 
 const getUserId = (req) => {
   return req.user?._id || req.user?.id || req.user?.sub;
@@ -137,6 +140,28 @@ const inviteResearcher = async (req, res) => {
     });
 
     const inviteLink = `${process.env.CLIENT_URL}/researcher/accept-invite?token=${rawToken}`;
+
+    console.log("Researcher invite link:", inviteLink);
+
+    try {
+      const emailResult = await sendResearcherInviteEmail({
+        to: normalizedEmail,
+        inviteLink,
+        organizationName: organization.name,
+        inviterName: inviter.name,
+      });
+
+      if (emailResult) {
+        console.log(`Researcher invitation email sent to ${normalizedEmail}`);
+      } else {
+        console.log(`Researcher invitation email not sent to ${normalizedEmail}`);
+      }
+    } catch (emailError) {
+      console.error(
+        `Failed to send researcher invitation email to ${normalizedEmail}:`,
+        emailError
+      );
+    }
 
     console.log("Researcher invite link:", inviteLink);
 

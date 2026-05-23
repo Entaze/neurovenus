@@ -19,7 +19,7 @@ export default function ResearchersPage() {
   const [researchers, setResearchers] = useState([]);
   const [usage, setUsage] = useState(null);
   const [email, setEmail] = useState("");
-  const [inviteLink, setInviteLink] = useState("");
+  const [, setInviteLink] = useState("");
   const [loading, setLoading] = useState(true);
   const [inviting, setInviting] = useState(false);
   const [error, setError] = useState("");
@@ -186,12 +186,12 @@ export default function ResearchersPage() {
             </button>
           </form>
 
-          {inviteLink && (
+          {/* {inviteLink && (
             <div style={styles.inviteBox}>
               <p style={styles.inviteLabel}>Invite link</p>
               <p style={styles.inviteLink}>{inviteLink}</p>
             </div>
-          )}
+          )} */}
         </section>
       ) : (
         <section style={styles.card}>
