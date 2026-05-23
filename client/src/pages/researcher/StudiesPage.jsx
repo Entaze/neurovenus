@@ -134,11 +134,12 @@ export default function StudiesPage() {
             New Protocol
           </button>
 
-          {activeStudyLimitReached && (
-            <p style={styles.limitMessage}>
-              You have reached your active study limit for this plan.
-            </p>
-          )}
+         {activeStudyLimitReached && (
+          <div style={styles.limitPill}>
+            <span style={styles.limitIcon}>ⓘ</span>
+            <span>Study limit reached for Standard plan</span>
+          </div>
+        )}
         </div>
       </div>
 
@@ -495,5 +496,24 @@ const styles = {
     gap: 6,
     minWidth: 320,
     paddingTop: 24,
+  },
+
+  limitPill: {
+    display: "inline-flex",
+    alignItems: "center",
+    gap: 8,
+    padding: "8px 12px",
+    borderRadius: 999,
+    background: "rgba(245, 158, 11, 0.10)",
+    border: "1px solid rgba(245, 158, 11, 0.18)",
+    color: "#fcd34d",
+    fontSize: 12,
+    fontWeight: 700,
+    lineHeight: 1,
+  },
+
+  limitIcon: {
+    fontSize: 12,
+    opacity: 0.9,
   },
 };
