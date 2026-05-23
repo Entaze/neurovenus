@@ -423,10 +423,11 @@ const styles = {
   limitMessage: {
     margin: 0,
     color: "#fca5a5",
-    fontSize: 13,
+    fontSize: 12,
     textAlign: "right",
     lineHeight: 1.4,
-    maxWidth: 320,
+    maxWidth: 280,
+    opacity: 0.9,
   },
 
   emptyEyebrow: {
@@ -491,7 +492,8 @@ const styles = {
     display: "flex",
     flexDirection: "column",
     alignItems: "flex-end",
-    gap: 8,
+    gap: 6,
     minWidth: 320,
+    paddingTop: 24,
   },
 };
