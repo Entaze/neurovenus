@@ -320,8 +320,16 @@ export default function NBackTask({
       stimulusStartedAtRef.current = Date.now();
 
       timeoutRef.current = setTimeout(() => {
-        recordResponse(null);
+        setPhase("postStimulusFixation");
       }, LETTER_MS);
+
+      return () => clearTimeout(timeoutRef.current);
+    }
+
+    if (phase === "postStimulusFixation") {
+      timeoutRef.current = setTimeout(() => {
+        recordResponse(null);
+      }, FIXATION_MS);
 
       return () => clearTimeout(timeoutRef.current);
     }
@@ -329,7 +337,10 @@ export default function NBackTask({
 
   useEffect(() => {
     const handleKeyDown = (event) => {
-      if (phase === "stimulus" && ["1", "2"].includes(event.key)) {
+      if (
+        ["stimulus", "postStimulusFixation"].includes(phase) &&
+        ["1", "2"].includes(event.key)
+      ) {
         recordResponse(event.key);
       }
     };
@@ -438,7 +449,7 @@ export default function NBackTask({
     );
   }
 
-  if (phase === "fixation") {
+  if (phase === "fixation" || phase === "postStimulusFixation") {
     return (
       <div className="w-full max-w-2xl rounded-3xl border border-slate-200 bg-white p-10 shadow-2xl shadow-black/20">
         <div className="py-24 text-center text-8xl font-semibold leading-none text-black">
