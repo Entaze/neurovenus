@@ -302,6 +302,12 @@ const styles = {
     background: "rgba(255,255,255,0.04)",
     color: "#ffffff",
     cursor: "pointer",
+
+    minWidth: 140,
+    display: "inline-flex",
+    alignItems: "center",
+    justifyContent: "center",
+    whiteSpace: "nowrap",
   },
 
   primaryButton: {
@@ -313,6 +319,12 @@ const styles = {
     fontWeight: 700,
     fontSize: 14,
     cursor: "pointer",
+
+    minWidth: 190,
+    display: "inline-flex",
+    alignItems: "center",
+    justifyContent: "center",
+    whiteSpace: "nowrap",
   },
 
   errorContainer: {

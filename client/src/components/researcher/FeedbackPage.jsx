@@ -519,6 +519,12 @@ const styles = {
     fontWeight: 700,
     cursor: "pointer",
     transition: "all 0.2s ease",
+
+    minWidth: 190,
+    display: "inline-flex",
+    alignItems: "center",
+    justifyContent: "center",
+    whiteSpace: "nowrap",
   },
 
   secondaryButton: {
@@ -530,6 +536,12 @@ const styles = {
     fontSize: 16,
     fontWeight: 600,
     cursor: "pointer",
+
+    minWidth: 140,
+    display: "inline-flex",
+    alignItems: "center",
+    justifyContent: "center",
+    whiteSpace: "nowrap",
   },
 
   disabledButton: {

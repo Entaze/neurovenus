@@ -312,5 +312,11 @@ const styles = {
     fontSize: 14,
     fontWeight: 800,
     cursor: "pointer",
+
+    minWidth: 190,
+    display: "inline-flex",
+    alignItems: "center",
+    justifyContent: "center",
+    whiteSpace: "nowrap",
   },
 };

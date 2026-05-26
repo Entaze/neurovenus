@@ -693,6 +693,12 @@ const styles = {
     fontWeight: 700,
     fontSize: 14,
     cursor: "pointer",
+
+    minWidth: 190,
+    display: "inline-flex",
+    alignItems: "center",
+    justifyContent: "center",
+    whiteSpace: "nowrap",
   },
 
   skeletonLine: {
