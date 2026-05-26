@@ -15,6 +15,85 @@ function formatStatus(user) {
   return "Active";
 }
 
+function ResearchersPageSkeleton() {
+  return (
+    <>
+      <section style={styles.card}>
+        <div style={styles.workspaceRow}>
+          <div>
+            <div style={{ ...styles.skeletonLine, width: 260, height: 30 }} />
+            <div
+              style={{
+                ...styles.skeletonLine,
+                width: 220,
+                height: 14,
+                marginTop: 14,
+              }}
+            />
+          </div>
+
+          <div style={{ ...styles.skeletonPill, width: 120, height: 34 }} />
+        </div>
+      </section>
+
+      <section style={styles.card}>
+        <div style={{ ...styles.skeletonLine, width: 180, height: 22 }} />
+
+        <div
+          style={{
+            display: "flex",
+            gap: 12,
+            marginTop: 22,
+            flexWrap: "wrap",
+          }}
+        >
+          <div
+            style={{
+              ...styles.skeletonBlock,
+              flex: 1,
+              minWidth: 280,
+              height: 46,
+            }}
+          />
+
+          <div
+            style={{
+              ...styles.skeletonBlock,
+              width: 170,
+              height: 46,
+            }}
+          />
+        </div>
+      </section>
+
+      <section style={styles.card}>
+        <div style={{ ...styles.skeletonLine, width: 220, height: 22 }} />
+
+        <div style={{ marginTop: 22, display: "grid", gap: 10 }}>
+          {[1, 2, 3].map((item) => (
+            <div key={item} style={styles.row}>
+              <div>
+                <div style={{ ...styles.skeletonLine, width: 160, height: 14 }} />
+                <div
+                  style={{
+                    ...styles.skeletonLine,
+                    width: 220,
+                    height: 12,
+                    marginTop: 10,
+                  }}
+                />
+              </div>
+
+              <div style={{ ...styles.skeletonLine, width: 90, height: 14 }} />
+              <div style={{ ...styles.skeletonPill, width: 80, height: 28 }} />
+            </div>
+          ))}
+        </div>
+      </section>
+    </>
+  );
+}
+
 export default function ResearchersPage() {
   const [researchers, setResearchers] = useState([]);
   const [usage, setUsage] = useState(null);
@@ -24,13 +103,14 @@ export default function ResearchersPage() {
   const [inviting, setInviting] = useState(false);
   const [error, setError] = useState("");
 
-  const collaborationEnabled = Boolean(
-    usage?.permissions?.collaborationEnabled
-  );
+  const usageReady = Boolean(usage);
+  const pageLoading = loading || !usageReady;
 
-  const canInviteResearchers = Boolean(
-    usage?.permissions?.canInviteResearchers
-  );
+  const collaborationEnabled =
+    usageReady && Boolean(usage.permissions?.collaborationEnabled);
+
+  const canInviteResearchers =
+    usageReady && Boolean(usage.permissions?.canInviteResearchers);
 
   const workspaceLabel = collaborationEnabled
     ? "Institutional Workspace"
@@ -54,8 +134,10 @@ export default function ResearchersPage() {
       researcherApi.getOrganizationUsage(),
     ]);
 
-    setResearchers(researchersData.researchers || []);
-    setUsage(usageData);
+    return {
+      researchers: researchersData.researchers || [],
+      usage: usageData,
+    };
   }
 
   useEffect(() => {
@@ -65,7 +147,13 @@ export default function ResearchersPage() {
       try {
         setLoading(true);
         setError("");
-        await loadData();
+
+        const data = await loadData();
+
+        if (!ignore) {
+          setResearchers(data.researchers);
+          setUsage(data.usage);
+        }
       } catch (err) {
         if (!ignore) {
           setError(
@@ -75,7 +163,9 @@ export default function ResearchersPage() {
           );
         }
       } finally {
-        if (!ignore) setLoading(false);
+        if (!ignore) {
+          setLoading(false);
+        }
       }
     }
 
@@ -85,6 +175,13 @@ export default function ResearchersPage() {
       ignore = true;
     };
   }, []);
+
+  const refreshData = async () => {
+    const data = await loadData();
+
+    setResearchers(data.researchers);
+    setUsage(data.usage);
+  };
 
   const handleInvite = async (e) => {
     e.preventDefault();
@@ -116,7 +213,7 @@ export default function ResearchersPage() {
       setInviteLink(response.inviteLink || "");
       setEmail("");
 
-      await loadData();
+      await refreshData();
     } catch (err) {
       const code = err?.response?.data?.code;
       const message = err?.response?.data?.message;
@@ -139,104 +236,108 @@ export default function ResearchersPage() {
   return (
     <ResearcherLayout>
       <h1 style={styles.title}>Researchers</h1>
+
       <p style={styles.subtitle}>
         Manage workspace researchers and collaboration access.
       </p>
 
       {error && <div style={styles.error}>{error}</div>}
 
-      <section style={styles.card}>
-        <h2 style={styles.sectionTitle}>Workspace Access</h2>
-
-        <div style={styles.workspaceRow}>
-          <div>
-            <p style={styles.workspaceValue}>{workspaceLabel}</p>
-            <p style={styles.muted}>{workspaceDescription}</p>
-          </div>
-
-          <span style={styles.badge}>
-            {collaborationEnabled ? "Institutional" : "Individual"}
-          </span>
-        </div>
-      </section>
-
-      {canInviteResearchers ? (
-        <section style={styles.card}>
-          <h2 style={styles.sectionTitle}>Invite Researcher</h2>
-
-          <form onSubmit={handleInvite} style={styles.form}>
-            <input
-              type="email"
-              value={email}
-              placeholder="researcher@example.com"
-              onChange={(e) => setEmail(e.target.value)}
-              style={styles.input}
-              disabled={inviting}
-            />
-
-            <button
-              type="submit"
-              disabled={inviting || !email.trim()}
-              style={{
-                ...styles.primaryButton,
-                ...(inviting || !email.trim() ? styles.buttonDisabled : {}),
-              }}
-            >
-              {inviting ? "Sending..." : "Invite Researcher"}
-            </button>
-          </form>
-
-          {/* {inviteLink && (
-            <div style={styles.inviteBox}>
-              <p style={styles.inviteLabel}>Invite link</p>
-              <p style={styles.inviteLink}>{inviteLink}</p>
-            </div>
-          )} */}
-        </section>
+      {pageLoading ? (
+        <ResearchersPageSkeleton />
       ) : (
-        <section style={styles.card}>
-          <h2 style={styles.sectionTitle}>Researcher Invitations</h2>
-          <p style={styles.muted}>
-            {collaborationEnabled
-              ? "Only workspace owners can invite researchers."
-              : "Researcher invitations are available on Institutional workspaces."}
-          </p>
-        </section>
-      )}
+        <>
+          <section style={styles.card}>
+            <h2 style={styles.sectionTitle}>Workspace Access</h2>
 
-      <section style={styles.card}>
-        <h2 style={styles.sectionTitle}>Workspace Researchers</h2>
+            <div style={styles.workspaceRow}>
+              <div>
+                <p style={styles.workspaceValue}>{workspaceLabel}</p>
+                <p style={styles.muted}>{workspaceDescription}</p>
+              </div>
 
-        {loading ? (
-          <p style={styles.muted}>Loading researchers...</p>
-        ) : sortedResearchers.length === 0 ? (
-          <p style={styles.muted}>No researchers found.</p>
-        ) : (
-          <div style={styles.table}>
-            {sortedResearchers.map((researcher) => (
-              <div key={researcher._id || researcher.id} style={styles.row}>
-                <div>
-                  <p style={styles.name}>{researcher.name}</p>
-                  <p style={styles.email}>{researcher.email}</p>
-                </div>
+              <span style={styles.badge}>
+                {collaborationEnabled ? "Institutional" : "Individual"}
+              </span>
+            </div>
+          </section>
 
-                <span style={styles.role}>{formatRole(researcher.role)}</span>
+          {canInviteResearchers ? (
+            <section style={styles.card}>
+              <h2 style={styles.sectionTitle}>Invite Researcher</h2>
 
-                <span
+              <form onSubmit={handleInvite} style={styles.form}>
+                <input
+                  type="email"
+                  value={email}
+                  placeholder="researcher@example.com"
+                  onChange={(e) => setEmail(e.target.value)}
+                  style={styles.input}
+                  disabled={inviting}
+                />
+
+                <button
+                  type="submit"
+                  disabled={inviting || !email.trim()}
                   style={{
-                    ...styles.status,
-                    ...(researcher.status === "pending"
-                      ? styles.statusPending
-                      : styles.statusActive),
+                    ...styles.primaryButton,
+                    ...(inviting || !email.trim() ? styles.buttonDisabled : {}),
                   }}
                 >
-                  {formatStatus(researcher)}
-                </span>
+                  {inviting ? "Sending..." : "Invite Researcher"}
+                </button>
+              </form>
+            </section>
+          ) : (
+            <section style={styles.card}>
+              <h2 style={styles.sectionTitle}>Researcher Invitations</h2>
+
+              <p style={styles.muted}>
+                {collaborationEnabled
+                  ? "Only workspace owners can invite researchers."
+                  : "Researcher invitations are available on Institutional workspaces."}
+              </p>
+            </section>
+          )}
+
+          <section style={styles.card}>
+            <h2 style={styles.sectionTitle}>Workspace Researchers</h2>
+
+            {sortedResearchers.length === 0 ? (
+              <p style={styles.muted}>No researchers found.</p>
+            ) : (
+              <div style={styles.table}>
+                {sortedResearchers.map((researcher) => (
+                  <div
+                    key={researcher._id || researcher.id}
+                    style={styles.row}
+                  >
+                    <div>
+                      <p style={styles.name}>{researcher.name}</p>
+                      <p style={styles.email}>{researcher.email}</p>
+                    </div>
+
+                    <span style={styles.role}>
+                      {formatRole(researcher.role)}
+                    </span>
+
+                    <span
+                      style={{
+                        ...styles.status,
+                        ...(researcher.status === "pending"
+                          ? styles.statusPending
+                          : styles.statusActive),
+                      }}
+                    >
+                      {formatStatus(researcher)}
+                    </span>
+                  </div>
+                ))}
               </div>
-            ))}
-          </div>
-        )}
-      </section>
+            )}
+          </section>
+        </>
+      )}
     </ResearcherLayout>
   );
 }
@@ -337,29 +438,6 @@ const styles = {
     cursor: "not-allowed",
   },
 
-  inviteBox: {
-    marginTop: 16,
-    padding: 14,
-    borderRadius: 12,
-    background: "rgba(14,165,233,0.08)",
-    border: "1px solid rgba(14,165,233,0.16)",
-  },
-
-  inviteLabel: {
-    margin: 0,
-    marginBottom: 6,
-    color: "#bae6fd",
-    fontSize: 12,
-    fontWeight: 800,
-  },
-
-  inviteLink: {
-    margin: 0,
-    color: "#e0f2fe",
-    fontSize: 13,
-    wordBreak: "break-all",
-  },
-
   table: {
     display: "grid",
     gap: 10,
@@ -420,5 +498,23 @@ const styles = {
     border: "1px solid rgba(248,113,113,0.28)",
     color: "#fecaca",
     fontSize: 14,
+  },
+
+  skeletonLine: {
+    borderRadius: 999,
+    background:
+      "linear-gradient(90deg, rgba(255,255,255,0.06), rgba(255,255,255,0.12), rgba(255,255,255,0.06))",
+  },
+
+  skeletonBlock: {
+    borderRadius: 12,
+    background:
+      "linear-gradient(90deg, rgba(255,255,255,0.05), rgba(255,255,255,0.1), rgba(255,255,255,0.05))",
+    border: "1px solid rgba(255,255,255,0.06)",
+  },
+
+  skeletonPill: {
+    borderRadius: 999,
+    background: "rgba(255,255,255,0.08)",
   },
 };

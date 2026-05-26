@@ -4,6 +4,36 @@ import ResearcherLayout from "../../components/researcher/ResearcherLayout";
 import StatCard from "../../components/researcher/StatCard";
 import { researcherApi } from "../../api/researcherApi";
 
+function StudiesPageSkeleton() {
+  return (
+    <>
+      <div style={styles.statsGrid}>
+        {[1, 2, 3, 4].map((item) => (
+          <div key={item} style={styles.skeletonStatCard}>
+            <div style={{ ...styles.skeletonLine, width: 110, height: 13 }} />
+            <div style={{ ...styles.skeletonLine, width: 70, height: 28, marginTop: 14 }} />
+            <div style={{ ...styles.skeletonLine, width: 160, height: 13, marginTop: 14 }} />
+          </div>
+        ))}
+      </div>
+
+      <section style={styles.card}>
+        <div style={styles.grid}>
+          {[1, 2, 3].map((item) => (
+            <div key={item} style={styles.studyCard}>
+              <div style={{ ...styles.skeletonLine, width: "70%", height: 22 }} />
+              <div style={{ ...styles.skeletonLine, width: "45%", height: 13, marginTop: 14 }} />
+              <div style={{ ...styles.skeletonLine, width: "100%", height: 13, marginTop: 18 }} />
+              <div style={{ ...styles.skeletonLine, width: "82%", height: 13, marginTop: 10 }} />
+              <div style={{ ...styles.skeletonBlock, width: 120, height: 40, marginTop: 22 }} />
+            </div>
+          ))}
+        </div>
+      </section>
+    </>
+  );
+}
+
 export default function StudiesPage() {
   const navigate = useNavigate();
 
@@ -11,7 +41,7 @@ export default function StudiesPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [usage, setUsage] = useState(null);
-  const [, setUsageLoading] = useState(true);
+  const [usageLoading, setUsageLoading] = useState(true);
 
   useEffect(() => {
     let ignore = false;
@@ -22,9 +52,7 @@ export default function StudiesPage() {
         setError("");
 
         const data = await researcherApi.getStudies();
-        const studyList = Array.isArray(data)
-          ? data
-          : data.studies || [];
+        const studyList = Array.isArray(data) ? data : data.studies || [];
 
         if (!ignore) {
           setStudies(studyList);
@@ -75,11 +103,13 @@ export default function StudiesPage() {
     };
   }, []);
 
-  // Dashboard metrics
+  const pageLoading = loading || usageLoading;
+
   const activeStudies = studies.length;
 
   const totalSessions = studies.reduce(
-    (sum, study) => sum + (study.sessions?.length || study.protocol?.sessions?.length || 0),
+    (sum, study) =>
+      sum + (study.sessions?.length || study.protocol?.sessions?.length || 0),
     0
   );
 
@@ -101,9 +131,9 @@ export default function StudiesPage() {
     usage?.organization?.plan
   );
 
-  const activeStudyLimitReached = !isUnlimitedPlan &&
-    usage?.usage?.activeStudiesUsed >=
-    usage?.limits?.maxActiveStudies;
+  const activeStudyLimitReached =
+    !isUnlimitedPlan &&
+    usage?.usage?.activeStudiesUsed >= usage?.limits?.maxActiveStudies;
 
   return (
     <ResearcherLayout>
@@ -125,145 +155,149 @@ export default function StudiesPage() {
           <button
             type="button"
             onClick={() => navigate("/researcher/studies/new")}
-            disabled={activeStudyLimitReached}
+            disabled={pageLoading || activeStudyLimitReached}
             style={{
               ...styles.primaryButton,
-              ...(activeStudyLimitReached ? styles.buttonDisabled : {}),
+              ...(pageLoading || activeStudyLimitReached
+                ? styles.buttonDisabled
+                : {}),
             }}
           >
             New Protocol
           </button>
 
-         {activeStudyLimitReached && (
-          <div style={styles.limitPill}>
-            <span style={styles.limitIcon}>ⓘ</span>
-            <span>Study limit reached for Standard plan</span>
-          </div>
-        )}
+          {!pageLoading && activeStudyLimitReached && (
+            <div style={styles.limitPill}>
+              <span style={styles.limitIcon}>ⓘ</span>
+              <span>Study limit reached for Standard plan</span>
+            </div>
+          )}
         </div>
       </div>
 
-      {/* Stats */}
-      {!loading && studies.length > 0 && (
-        <div style={styles.statsGrid}>
-          <StatCard
-            label="Active Studies"
-            value={activeStudies}
-            subtitle="Studies currently available"
-            accent="#38bdf8"
-          />
-
-          <StatCard
-            label="Sessions"
-            value={totalSessions}
-            subtitle="Configured across all studies"
-            accent="#6366f1"
-          />
-
-          <StatCard
-            label="Assessments"
-            value={totalAssessments}
-            subtitle="Included across all protocols"
-            accent="#22c55e"
-          />
-
-          <StatCard
-            label="Latest Study"
-            value={latestStudy}
-            subtitle="Most recently created protocol"
-            accent="#a855f7"
-          />
-        </div>
-      )}
-
       {error && <div style={styles.error}>{error}</div>}
 
-      <section style={styles.card}>
-        {loading ? (
-          <p style={styles.muted}>Loading studies...</p>
-        ) : studies.length === 0 ? (
-          <div style={styles.emptyState}>
-            <p style={styles.emptyEyebrow}>WELCOME TO NEUROVENUS</p>
+      {pageLoading ? (
+        <StudiesPageSkeleton />
+      ) : (
+        <>
+          {studies.length > 0 && (
+            <div style={styles.statsGrid}>
+              <StatCard
+                label="Active Studies"
+                value={activeStudies}
+                subtitle="Studies currently available"
+                accent="#38bdf8"
+              />
 
-            <h3 style={styles.emptyTitle}>
-              Create your first research protocol
-            </h3>
+              <StatCard
+                label="Sessions"
+                value={totalSessions}
+                subtitle="Configured across all studies"
+                accent="#6366f1"
+              />
 
-            <p style={styles.emptySubtitle}>
-              Neurovenus helps researchers design structured assessment workflows,
-              recruit participants remotely, and export analysis-ready datasets.
-            </p>
+              <StatCard
+                label="Assessments"
+                value={totalAssessments}
+                subtitle="Included across all protocols"
+                accent="#22c55e"
+              />
 
-            <div style={styles.workflowCard}>
-              <p style={styles.workflowTitle}>
-                Most researchers begin by:
-              </p>
-
-              <div style={styles.workflowList}>
-                <div style={styles.workflowStep}>
-                  <span style={styles.workflowNumber}>1</span>
-                  <span>Create a protocol</span>
-                </div>
-
-                <div style={styles.workflowStep}>
-                  <span style={styles.workflowNumber}>2</span>
-                  <span>Add sessions and assessments</span>
-                </div>
-
-                <div style={styles.workflowStep}>
-                  <span style={styles.workflowNumber}>3</span>
-                  <span>Recruit participants remotely</span>
-                </div>
-
-                <div style={styles.workflowStep}>
-                  <span style={styles.workflowNumber}>4</span>
-                  <span>Export analysis-ready data</span>
-                </div>
-              </div>
+              <StatCard
+                label="Latest Study"
+                value={latestStudy}
+                subtitle="Most recently created protocol"
+                accent="#a855f7"
+              />
             </div>
+          )}
 
-            <button
-              type="button"
-              onClick={() => navigate("/researcher/studies/new")}
-              disabled={activeStudyLimitReached}
-              style={{
-                ...styles.primaryButton,
-                ...(activeStudyLimitReached ? styles.buttonDisabled : {}),
-              }}
-            >
-              Create First Protocol
-            </button>
-          </div>
-          ) : (
-          <div style={styles.grid}>
-            {studies.map((study) => (
-              <div key={study._id} style={styles.studyCard}>
-                <h3 style={styles.studyTitle}>{study.title}</h3>
+          <section style={styles.card}>
+            {studies.length === 0 ? (
+              <div style={styles.emptyState}>
+                <p style={styles.emptyEyebrow}>WELCOME TO NEUROVENUS</p>
 
-                <p style={styles.protocol}>
-                  Protocol: {study.protocolVersion || "custom"}
+                <h3 style={styles.emptyTitle}>
+                  Create your first research protocol
+                </h3>
+
+                <p style={styles.emptySubtitle}>
+                  Neurovenus helps researchers design structured assessment
+                  workflows, recruit participants remotely, and export
+                  analysis-ready datasets.
                 </p>
 
-                <p style={styles.description}>
-                  {study.description || "No description provided."}
-                </p>
+                <div style={styles.workflowCard}>
+                  <p style={styles.workflowTitle}>Most researchers begin by:</p>
 
-                <div style={styles.actions}>
-                  <button
-                    type="button"
-                    onClick={() =>
-                      navigate(`/researcher/studies/${study._id}`)
-                    }
-                    style={styles.secondaryButton}
-                  >
-                    Open Study
-                  </button>
+                  <div style={styles.workflowList}>
+                    <div style={styles.workflowStep}>
+                      <span style={styles.workflowNumber}>1</span>
+                      <span>Create a protocol</span>
+                    </div>
+
+                    <div style={styles.workflowStep}>
+                      <span style={styles.workflowNumber}>2</span>
+                      <span>Add sessions and assessments</span>
+                    </div>
+
+                    <div style={styles.workflowStep}>
+                      <span style={styles.workflowNumber}>3</span>
+                      <span>Recruit participants remotely</span>
+                    </div>
+
+                    <div style={styles.workflowStep}>
+                      <span style={styles.workflowNumber}>4</span>
+                      <span>Export analysis-ready data</span>
+                    </div>
+                  </div>
                 </div>
+
+                <button
+                  type="button"
+                  onClick={() => navigate("/researcher/studies/new")}
+                  disabled={activeStudyLimitReached}
+                  style={{
+                    ...styles.primaryButton,
+                    ...(activeStudyLimitReached ? styles.buttonDisabled : {}),
+                  }}
+                >
+                  Create First Protocol
+                </button>
               </div>
-            ))}
-          </div>
-        )}
-      </section>
+            ) : (
+              <div style={styles.grid}>
+                {studies.map((study) => (
+                  <div key={study._id} style={styles.studyCard}>
+                    <h3 style={styles.studyTitle}>{study.title}</h3>
+
+                    <p style={styles.protocol}>
+                      Protocol: {study.protocolVersion || "custom"}
+                    </p>
+
+                    <p style={styles.description}>
+                      {study.description || "No description provided."}
+                    </p>
+
+                    <div style={styles.actions}>
+                      <button
+                        type="button"
+                        onClick={() =>
+                          navigate(`/researcher/studies/${study._id}`)
+                        }
+                        style={styles.secondaryButton}
+                      >
+                        Open Study
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </section>
+        </>
+      )}
     </ResearcherLayout>
   );
 }
@@ -515,5 +549,26 @@ const styles = {
   limitIcon: {
     fontSize: 12,
     opacity: 0.9,
+  },
+
+  skeletonStatCard: {
+    padding: 20,
+    borderRadius: 16,
+    background: "rgba(255,255,255,0.04)",
+    border: "1px solid rgba(255,255,255,0.08)",
+    boxShadow: "0 18px 60px rgba(0,0,0,0.18)",
+  },
+
+  skeletonLine: {
+    borderRadius: 999,
+    background:
+      "linear-gradient(90deg, rgba(255,255,255,0.06), rgba(255,255,255,0.12), rgba(255,255,255,0.06))",
+  },
+
+  skeletonBlock: {
+    borderRadius: 12,
+    background:
+      "linear-gradient(90deg, rgba(255,255,255,0.05), rgba(255,255,255,0.1), rgba(255,255,255,0.05))",
+    border: "1px solid rgba(255,255,255,0.06)",
   },
 };

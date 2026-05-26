@@ -124,7 +124,12 @@ export default function CreateStudyPage() {
             </div>
           </section>
 
-          <section style={styles.card}>
+          <section
+            style={{
+              ...styles.card,
+              minHeight: 720,
+            }}
+          >
             <ProtocolBuilder value={protocol} onChange={setProtocol} />
           </section>
 

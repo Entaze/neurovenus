@@ -35,11 +35,9 @@ const getAssessmentLabel = (assessment) => {
 
 const formatDelayValue = (value, unit) => {
   const number = Number(value || 0);
-
   if (number <= 0) return null;
 
   const clean = Number.isInteger(number) ? number : Number(number.toFixed(2));
-
   return `Opens after ${clean} ${unit}${clean === 1 ? "" : "s"}`;
 };
 
@@ -54,30 +52,84 @@ const getSessionDelayLabel = (session) => {
   }
 
   const unlockMinutes = Number(session?.unlockAfterMinutes || 0);
-
-  if (unlockMinutes > 0) {
-    return formatDelayValue(unlockMinutes, "minute");
-  }
+  if (unlockMinutes > 0) return formatDelayValue(unlockMinutes, "minute");
 
   const unlockHours = Number(session?.unlockAfterHours || 0);
-
   if (unlockHours > 0) {
     if (unlockHours < 1) return formatDelayValue(unlockHours * 60, "minute");
     if (unlockHours % 24 === 0) return formatDelayValue(unlockHours / 24, "day");
-
     return formatDelayValue(unlockHours, "hour");
   }
 
   const offsetDays = Number(session?.offsetDays || 0);
-
   if (offsetDays > 0) {
     if (offsetDays < 1) return formatDelayValue(offsetDays * 24 * 60, "minute");
-
     return formatDelayValue(offsetDays, "day");
   }
 
   return "Available immediately";
 };
+
+function ParticipantsPageSkeleton() {
+  return (
+    <>
+      <section style={styles.card}>
+        <div style={styles.studyHeader}>
+          <div>
+            <div style={{ ...styles.skeletonLine, width: 170, height: 22 }} />
+            <div style={{ ...styles.skeletonLine, width: 260, height: 14, marginTop: 12 }} />
+          </div>
+
+          <div style={styles.studyStats}>
+            <div style={{ ...styles.skeletonPill, width: 90 }} />
+            <div style={{ ...styles.skeletonPill, width: 110 }} />
+          </div>
+        </div>
+
+        <div style={{ ...styles.skeletonBlock, height: 44, marginBottom: 18 }} />
+
+        <div style={styles.protocolSummary}>
+          {[1, 2].map((item) => (
+            <div key={item} style={styles.sessionPill}>
+              <div style={styles.sessionTopRow}>
+                <div style={{ ...styles.skeletonLine, width: 120, height: 14 }} />
+                <div style={{ ...styles.skeletonPill, width: 90 }} />
+              </div>
+
+              <div style={{ ...styles.skeletonLine, width: 140, height: 12, marginTop: 12 }} />
+              <div style={{ ...styles.skeletonLine, width: "80%", height: 13, marginTop: 12 }} />
+            </div>
+          ))}
+        </div>
+      </section>
+
+      <section style={styles.card}>
+        <div style={{ ...styles.skeletonLine, width: 180, height: 22 }} />
+        <div style={{ ...styles.skeletonLine, width: 320, height: 14, marginTop: 12 }} />
+        <div style={{ ...styles.skeletonBlock, height: 46, marginTop: 20 }} />
+      </section>
+
+      <section style={styles.card}>
+        <div style={styles.sectionHeader}>
+          <div>
+            <div style={{ ...styles.skeletonLine, width: 160, height: 22 }} />
+            <div style={{ ...styles.skeletonLine, width: 130, height: 14, marginTop: 12 }} />
+          </div>
+        </div>
+
+        <div style={{ ...styles.skeletonBlock, height: 44, marginBottom: 16 }} />
+
+        {[1, 2, 3].map((item) => (
+          <div key={item} style={styles.skeletonTableRow}>
+            <div style={{ ...styles.skeletonLine, width: "34%", height: 14 }} />
+            <div style={{ ...styles.skeletonLine, width: "20%", height: 14 }} />
+            <div style={{ ...styles.skeletonLine, width: "16%", height: 14 }} />
+          </div>
+        ))}
+      </section>
+    </>
+  );
+}
 
 export default function ParticipantsPage() {
   const [studies, setStudies] = useState([]);
@@ -88,7 +140,7 @@ export default function ParticipantsPage() {
 
   const [participants, setParticipants] = useState([]);
   const [studiesLoading, setStudiesLoading] = useState(true);
-  const [participantsLoading, setParticipantsLoading] = useState(false);
+  const [participantsLoading, setParticipantsLoading] = useState(true);
   const [inviteLoading, setInviteLoading] = useState(false);
   const [error, setError] = useState("");
   const [usage, setUsage] = useState(null);
@@ -122,6 +174,8 @@ export default function ParticipantsPage() {
     );
   }, [participants, searchTerm]);
 
+  const pageLoading = studiesLoading || participantsLoading || usageLoading;
+
   useEffect(() => {
     let ignore = false;
 
@@ -148,6 +202,7 @@ export default function ParticipantsPage() {
             localStorage.setItem("selectedStudyId", firstStudyId);
           } else {
             localStorage.removeItem("selectedStudyId");
+            setParticipantsLoading(false);
           }
         }
       } catch (err) {
@@ -160,6 +215,7 @@ export default function ParticipantsPage() {
           setStudies([]);
           setSelectedStudyId("");
           setParticipants([]);
+          setParticipantsLoading(false);
           localStorage.removeItem("selectedStudyId");
         }
       } finally {
@@ -174,7 +230,6 @@ export default function ParticipantsPage() {
     return () => {
       ignore = true;
     };
-    // We intentionally only run this on mount.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -182,6 +237,7 @@ export default function ParticipantsPage() {
     if (!selectedStudyId || !selectedStudy) {
       queueMicrotask(() => {
         setParticipants([]);
+        setParticipantsLoading(false);
       });
       return;
     }
@@ -257,6 +313,7 @@ export default function ParticipantsPage() {
     setSelectedStudyId(studyId);
     setParticipants([]);
     setSearchTerm("");
+    setParticipantsLoading(Boolean(studyId));
 
     if (studyId) {
       localStorage.setItem("selectedStudyId", studyId);
@@ -272,8 +329,7 @@ export default function ParticipantsPage() {
   const participantLimitReached =
     !isUnlimitedPlan &&
     usage &&
-    usage.usage.participantsThisMonth >=
-      usage.limits.maxParticipantsPerMonth;
+    usage.usage.participantsThisMonth >= usage.limits.maxParticipantsPerMonth;
 
   const handleInvite = async ({ email, studyId }) => {
     try {
@@ -297,13 +353,9 @@ export default function ParticipantsPage() {
       const message = err?.response?.data?.message;
 
       if (code === "PARTICIPANT_LIMIT_REACHED") {
-        setError(
-          message || "You have reached your monthly participant limit."
-        );
+        setError(message || "You have reached your monthly participant limit.");
       } else {
-        setError(
-          message || err?.message || "Failed to invite participant."
-        );
+        setError(message || err?.message || "Failed to invite participant.");
       }
 
       throw err;
@@ -331,131 +383,130 @@ export default function ParticipantsPage() {
 
       {error && <div style={styles.error}>{error}</div>}
 
-      <section style={styles.card}>
-        <div style={styles.studyHeader}>
-          <div>
-            <h2 style={styles.sectionTitle}>Selected Protocol</h2>
-          </div>
+      {pageLoading ? (
+        <ParticipantsPageSkeleton />
+      ) : (
+        <>
+          <section style={styles.card}>
+            <div style={styles.studyHeader}>
+              <div>
+                <h2 style={styles.sectionTitle}>Selected Protocol</h2>
+              </div>
 
-          {selectedStudy && (
-            <div style={styles.studyStats}>
-              <span>{studySessions.length} sessions</span>
-              <span>{totalAssessments} assessments</span>
+              {selectedStudy && (
+                <div style={styles.studyStats}>
+                  <span>{studySessions.length} sessions</span>
+                  <span>{totalAssessments} assessments</span>
+                </div>
+              )}
             </div>
-          )}
-        </div>
 
-        {!studiesLoading && studies.length === 0 ? (
-          <div style={styles.emptyState}>
-            <p style={styles.emptyTitle}>No protocols yet</p>
-            <p style={styles.emptySubtitle}>
-              Create your first research protocol to begin recruiting participants and collecting assessment data remotely.
-            </p>
-            <button
-              type="button"
-              style={styles.primaryButton}
-              onClick={() => (window.location.href = "/researcher/studies/new")}
-            >
-              Create First Protocol
-            </button>
-          </div>
-        ) : (
-          <StudySelector
-            studies={studies}
-            selectedStudyId={selectedStudyId}
-            onChange={handleStudyChange}
-            loading={studiesLoading}
+            {studies.length === 0 ? (
+              <div style={styles.emptyState}>
+                <p style={styles.emptyTitle}>No protocols yet</p>
+                <p style={styles.emptySubtitle}>
+                  Create your first research protocol to begin recruiting
+                  participants and collecting assessment data remotely.
+                </p>
+                <button
+                  type="button"
+                  style={styles.primaryButton}
+                  onClick={() => (window.location.href = "/researcher/studies/new")}
+                >
+                  Create First Protocol
+                </button>
+              </div>
+            ) : (
+              <StudySelector
+                studies={studies}
+                selectedStudyId={selectedStudyId}
+                onChange={handleStudyChange}
+                loading={false}
+              />
+            )}
+
+            {selectedStudy && (
+              <>
+                <p style={styles.muted}>
+                  Managing participants for{" "}
+                  <span style={styles.highlight}>{selectedStudy.title}</span>
+                </p>
+
+                <div style={styles.protocolSummary}>
+                  {studySessions.map((session, index) => {
+                    const assessments = getSessionAssessments(session);
+
+                    return (
+                      <div
+                        key={`${session.order || index}-${index}`}
+                        style={styles.sessionPill}
+                      >
+                        <div style={styles.sessionTopRow}>
+                          <p style={styles.sessionName}>
+                            {session.label || session.name || `Session ${index + 1}`}
+                          </p>
+
+                          <span style={styles.sessionBadge}>
+                            {assessments.length} assessment
+                            {assessments.length === 1 ? "" : "s"}
+                          </span>
+                        </div>
+
+                        <p style={styles.sessionDelay}>
+                          {getSessionDelayLabel(session)}
+                        </p>
+
+                        <p style={styles.assessmentList}>
+                          {assessments.length
+                            ? assessments.map(getAssessmentLabel).join(" · ")
+                            : "No assessments configured"}
+                        </p>
+                      </div>
+                    );
+                  })}
+                </div>
+              </>
+            )}
+          </section>
+
+          <InviteParticipantModal
+            studyId={selectedStudyId}
+            loading={inviteLoading}
+            disabled={!selectedStudy || participantLimitReached}
+            disabledMessage={
+              participantLimitReached
+                ? "You have reached your monthly participant limit for this plan."
+                : ""
+            }
+            onInvite={handleInvite}
           />
-        )}
 
-        {selectedStudy && (
-          <>
-            <p style={styles.muted}>
-              Managing participants for{" "}
-              <span style={styles.highlight}>{selectedStudy.title}</span>
-            </p>
-
-            <div style={styles.protocolSummary}>
-              {studySessions.map((session, index) => {
-                const assessments = getSessionAssessments(session);
-
-                return (
-                  <div
-                    key={`${session.order || index}-${index}`}
-                    style={styles.sessionPill}
-                  >
-                    <div style={styles.sessionTopRow}>
-                      <p style={styles.sessionName}>
-                        {session.label || session.name || `Session ${index + 1}`}
-                      </p>
-
-                      <span style={styles.sessionBadge}>
-                        {assessments.length} assessment
-                        {assessments.length === 1 ? "" : "s"}
-                      </span>
-                    </div>
-
-                    <p style={styles.sessionDelay}>
-                      {getSessionDelayLabel(session)}
-                    </p>
-
-                    <p style={styles.assessmentList}>
-                      {assessments.length
-                        ? assessments.map(getAssessmentLabel).join(" · ")
-                        : "No assessments configured"}
-                    </p>
-                  </div>
-                );
-              })}
+          <section style={styles.card}>
+            <div style={styles.sectionHeader}>
+              <div>
+                <h2 style={styles.sectionTitle}>Participant List</h2>
+                <p style={styles.muted}>
+                  {filteredParticipants.length} participant
+                  {filteredParticipants.length === 1 ? "" : "s"} found
+                </p>
+              </div>
             </div>
-          </>
-        )}
-      </section>
 
-      {usageLoading && (
-        <p style={styles.muted}>Loading usage information...</p>
+            <input
+              type="text"
+              placeholder="Search participant by email..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              style={styles.input}
+            />
+
+            <ParticipantsTable
+              participants={filteredParticipants}
+              onExport={handleExportParticipant}
+            />
+          </section>
+        </>
       )}
-
-      <InviteParticipantModal
-        studyId={selectedStudyId}
-        loading={inviteLoading}
-        disabled={!selectedStudy || participantLimitReached}
-        disabledMessage={
-          participantLimitReached
-            ? "You have reached your monthly participant limit for this plan."
-            : ""
-        }
-        onInvite={handleInvite}
-      />
-
-      <section style={styles.card}>
-        <div style={styles.sectionHeader}>
-          <div>
-            <h2 style={styles.sectionTitle}>Participant List</h2>
-            <p style={styles.muted}>
-              {filteredParticipants.length} participant
-              {filteredParticipants.length === 1 ? "" : "s"} found
-            </p>
-          </div>
-        </div>
-
-        <input
-          type="text"
-          placeholder="Search participant by email..."
-          value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
-          style={styles.input}
-        />
-
-        {participantsLoading ? (
-          <p style={styles.muted}>Loading participants...</p>
-        ) : (
-          <ParticipantsTable
-            participants={filteredParticipants}
-            onExport={handleExportParticipant}
-          />
-        )}
-      </section>
     </ResearcherLayout>
   );
 }
@@ -642,5 +693,33 @@ const styles = {
     fontWeight: 700,
     fontSize: 14,
     cursor: "pointer",
+  },
+
+  skeletonLine: {
+    borderRadius: 999,
+    background:
+      "linear-gradient(90deg, rgba(255,255,255,0.06), rgba(255,255,255,0.12), rgba(255,255,255,0.06))",
+  },
+
+  skeletonBlock: {
+    width: "100%",
+    borderRadius: 12,
+    background:
+      "linear-gradient(90deg, rgba(255,255,255,0.05), rgba(255,255,255,0.1), rgba(255,255,255,0.05))",
+    border: "1px solid rgba(255,255,255,0.06)",
+  },
+
+  skeletonPill: {
+    height: 28,
+    borderRadius: 999,
+    background: "rgba(255,255,255,0.08)",
+  },
+
+  skeletonTableRow: {
+    display: "flex",
+    justifyContent: "space-between",
+    gap: 16,
+    padding: "16px 0",
+    borderTop: "1px solid rgba(255,255,255,0.06)",
   },
 };

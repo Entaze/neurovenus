@@ -40,6 +40,99 @@ const getAssessmentLabel = (assessmentOrKey) => {
   return assessmentNameMap[key] || assessmentOrKey?.name || key || "Assessment";
 };
 
+function ExportsPageSkeleton() {
+  return (
+    <>
+      <section style={styles.card}>
+        <div style={{ ...styles.skeletonLine, width: 180, height: 22 }} />
+
+        <div
+          style={{
+            ...styles.skeletonBlock,
+            height: 46,
+            marginTop: 22,
+          }}
+        />
+
+        <div style={styles.studySummary}>
+          <div style={{ ...styles.skeletonLine, width: 240, height: 18 }} />
+
+          <div style={styles.metaRow}>
+            <div style={{ ...styles.skeletonPill, width: 120, height: 28 }} />
+            <div style={{ ...styles.skeletonPill, width: 140, height: 28 }} />
+            <div style={{ ...styles.skeletonPill, width: 130, height: 28 }} />
+          </div>
+
+          <div
+            style={{
+              ...styles.skeletonLine,
+              width: 180,
+              height: 13,
+              marginTop: 14,
+            }}
+          />
+
+          <div
+            style={{
+              ...styles.skeletonLine,
+              width: "80%",
+              height: 13,
+              marginTop: 14,
+            }}
+          />
+        </div>
+      </section>
+
+      <section style={styles.card}>
+        <div style={{ ...styles.skeletonLine, width: 200, height: 22 }} />
+
+        <div
+          style={{
+            ...styles.skeletonLine,
+            width: "70%",
+            height: 13,
+            marginTop: 16,
+          }}
+        />
+
+        <div
+          style={{
+            ...styles.skeletonBlock,
+            height: 46,
+            marginTop: 22,
+          }}
+        />
+      </section>
+
+      <section style={styles.card}>
+        <div style={{ ...styles.skeletonLine, width: 260, height: 22 }} />
+
+        <div
+          style={{
+            ...styles.skeletonLine,
+            width: "80%",
+            height: 13,
+            marginTop: 16,
+          }}
+        />
+
+        <div style={{ ...styles.buttonGrid, marginTop: 22 }}>
+          {[1, 2, 3].map((item) => (
+            <div
+              key={item}
+              style={{
+                ...styles.skeletonBlock,
+                width: 220,
+                height: 44,
+              }}
+            />
+          ))}
+        </div>
+      </section>
+    </>
+  );
+}
+
 export default function ExportsPage() {
   const [studies, setStudies] = useState([]);
   const [selectedStudyId, setSelectedStudyId] = useState(
@@ -50,7 +143,7 @@ export default function ExportsPage() {
   const [selectedParticipantId, setSelectedParticipantId] = useState("");
 
   const [loading, setLoading] = useState(true);
-  const [participantsLoading, setParticipantsLoading] = useState(false);
+  const [participantsLoading, setParticipantsLoading] = useState(true);
   const [error, setError] = useState("");
 
   const selectedStudy = useMemo(() => {
@@ -80,6 +173,8 @@ export default function ExportsPage() {
     return Array.from(map.values());
   }, [sessions]);
 
+  const pageLoading = loading || participantsLoading;
+
   useEffect(() => {
     let ignore = false;
 
@@ -91,16 +186,33 @@ export default function ExportsPage() {
         const data = await researcherApi.getStudies();
         const studyList = Array.isArray(data) ? data : data.studies || [];
 
-        if (!ignore) {
-          setStudies(studyList);
+        if (ignore) return;
 
-          if (!selectedStudyId && studyList.length > 0) {
-            setSelectedStudyId(studyList[0]._id);
+        setStudies(studyList);
+
+        const validStudyIds = studyList.map((study) => study._id);
+
+        if (!selectedStudyId || !validStudyIds.includes(selectedStudyId)) {
+          const firstStudyId = studyList[0]?._id || "";
+
+          setSelectedStudyId(firstStudyId);
+
+          if (firstStudyId) {
+            localStorage.setItem("selectedStudyId", firstStudyId);
+          } else {
+            localStorage.removeItem("selectedStudyId");
+            setParticipants([]);
+            setParticipantsLoading(false);
           }
         }
       } catch (err) {
         if (!ignore) {
           setError(err?.message || "Failed to load studies.");
+          setStudies([]);
+          setSelectedStudyId("");
+          setParticipants([]);
+          setParticipantsLoading(false);
+          localStorage.removeItem("selectedStudyId");
         }
       } finally {
         if (!ignore) {
@@ -120,8 +232,8 @@ export default function ExportsPage() {
   const handleStudyChange = (studyId) => {
     setSelectedStudyId(studyId);
     setSelectedParticipantId("");
-    // setSelectedSessionOrder("");
-    // setSelectedTaskType("");
+    setParticipants([]);
+    setParticipantsLoading(Boolean(studyId));
 
     if (studyId) {
       localStorage.setItem("selectedStudyId", studyId);
@@ -134,6 +246,7 @@ export default function ExportsPage() {
     if (!selectedStudyId) {
       queueMicrotask(() => {
         setParticipants([]);
+        setParticipantsLoading(false);
       });
       return;
     }
@@ -173,172 +286,180 @@ export default function ExportsPage() {
   return (
     <ResearcherLayout>
       <h1 style={styles.title}>Exports</h1>
+
       <p style={styles.subtitle}>
-        Export participant, session, and assessment data for statistical analysis.
+        Export participant, session, and assessment data for statistical
+        analysis.
       </p>
 
       {error && <div style={styles.error}>{error}</div>}
 
-      <section style={styles.card}>
-        <h2 style={styles.sectionTitle}>Select Protocol</h2>
-
-        <StudySelector
-          studies={studies}
-          selectedStudyId={selectedStudyId}
-          onChange={handleStudyChange}
-          loading={loading}
-        />
-
-        {selectedStudy ? (
-          <div style={styles.studySummary}>
-            <p style={styles.studyTitle}>{selectedStudy.title}</p>
-
-            <div style={styles.metaRow}>
-              <span style={styles.metaPill}>
-                {sessions.length} session{sessions.length === 1 ? "" : "s"}
-              </span>
-
-              <span style={styles.metaPill}>
-                {uniqueAssessments.length} assessment
-                {uniqueAssessments.length === 1 ? "" : "s"}
-              </span>
-
-              <span style={styles.metaPill}>
-                {participants.length} participant
-                {participants.length === 1 ? "" : "s"}
-              </span>
-            </div>
-
-            <p style={styles.studyMeta}>
-              Protocol version: {selectedStudy.protocolVersion || "Not set"}
-            </p>
-
-            {selectedStudy.description && (
-              <p style={styles.studyDescription}>
-                {selectedStudy.description}
-              </p>
-            )}
-          </div>
-        ) : (
-          <p style={styles.muted}>Select a protocol to export participant and assessment data.</p>
-        )}
-      </section>
-
-      {selectedStudyId && (
-        <section style={styles.card}>
-          <h2 style={styles.sectionTitle}>Select Participant</h2>
-
-          <p style={styles.cardText}>
-            Choose a participant to export their complete dataset, specific sessions,
-            or individual assessments.
-          </p>
-
-          <select
-            value={selectedParticipantId}
-            onChange={(e) => {
-              setSelectedParticipantId(e.target.value);
-              // setSelectedSessionOrder("");
-              // setSelectedTaskType("");
-            }}
-            style={styles.select}
-            disabled={!selectedStudyId || participantsLoading}
-          >
-            <option value="">
-              {participantsLoading
-                ? "Loading participants..."
-                : "Select participant"}
-            </option>
-
-            {participants.map((participant) => (
-              <option key={participant._id} value={participant._id}>
-                {participant.participantCode || participant.email}
-                {participant.email ? ` · ${participant.email}` : ""}
-              </option>
-            ))}
-          </select>
-        </section>
-      )}
-
-      {selectedParticipantId && (
+      {pageLoading ? (
+        <ExportsPageSkeleton />
+      ) : (
         <>
           <section style={styles.card}>
-            <h2 style={styles.sectionTitle}>Full Participant Dataset</h2>
+            <h2 style={styles.sectionTitle}>Select Protocol</h2>
 
-            <p style={styles.cardText}>
-              Export an analysis-ready dataset containing sessions, assessments, scoring outputs, and trial-level responses.
-            </p>
-
-            <ExportButton
-              label="Export Full Participant CSV"
-              onExport={() =>
-                researcherApi.downloadStudyExport(
-                  selectedStudyId,
-                  {
-                    participantId: selectedParticipantId,
-                  },
-                  `participant-${selectedParticipantId}.csv`
-                )
-              }
+            <StudySelector
+              studies={studies}
+              selectedStudyId={selectedStudyId}
+              onChange={handleStudyChange}
+              loading={false}
             />
+
+            {selectedStudy ? (
+              <div style={styles.studySummary}>
+                <p style={styles.studyTitle}>{selectedStudy.title}</p>
+
+                <div style={styles.metaRow}>
+                  <span style={styles.metaPill}>
+                    {sessions.length} session
+                    {sessions.length === 1 ? "" : "s"}
+                  </span>
+
+                  <span style={styles.metaPill}>
+                    {uniqueAssessments.length} assessment
+                    {uniqueAssessments.length === 1 ? "" : "s"}
+                  </span>
+
+                  <span style={styles.metaPill}>
+                    {participants.length} participant
+                    {participants.length === 1 ? "" : "s"}
+                  </span>
+                </div>
+
+                <p style={styles.studyMeta}>
+                  Protocol version: {selectedStudy.protocolVersion || "Not set"}
+                </p>
+
+                {selectedStudy.description && (
+                  <p style={styles.studyDescription}>
+                    {selectedStudy.description}
+                  </p>
+                )}
+              </div>
+            ) : (
+              <p style={styles.muted}>
+                Select a protocol to export participant and assessment data.
+              </p>
+            )}
           </section>
 
-          <section style={styles.card}>
-            <h2 style={styles.sectionTitle}>Session Datasets</h2>
+          {selectedStudyId && (
+            <section style={styles.card}>
+              <h2 style={styles.sectionTitle}>Select Participant</h2>
 
-            <p style={styles.cardText}>
-              Export a single session for the selected participant.
-            </p>
+              <p style={styles.cardText}>
+                Choose a participant to export their complete dataset, specific
+                sessions, or individual assessments.
+              </p>
 
-            <div style={styles.buttonGrid}>
-              {sessions.map((session, index) => {
-                const order = session.order || index + 1;
+              <select
+                value={selectedParticipantId}
+                onChange={(e) => {
+                  setSelectedParticipantId(e.target.value);
+                }}
+                style={styles.select}
+                disabled={!selectedStudyId}
+              >
+                <option value="">Select participant</option>
 
-                return (
-                  <ExportButton
-                    key={order}
-                    label={`Session ${order}`}
-                    onExport={() =>
-                      researcherApi.downloadStudyExport(
-                        selectedStudyId,
-                        {
-                          participantId: selectedParticipantId,
-                          sessionOrder: order,
-                        },
-                        `participant-${selectedParticipantId}-session-${order}.csv`
-                      )
-                    }
-                  />
-                );
-              })}
-            </div>
-          </section>
+                {participants.map((participant) => (
+                  <option key={participant._id} value={participant._id}>
+                    {participant.participantCode || participant.email}
+                    {participant.email ? ` · ${participant.email}` : ""}
+                  </option>
+                ))}
+              </select>
+            </section>
+          )}
 
-          <section style={styles.card}>
-            <h2 style={styles.sectionTitle}>Assessment Exports</h2>
+          {selectedParticipantId && (
+            <>
+              <section style={styles.card}>
+                <h2 style={styles.sectionTitle}>
+                  Full Participant Dataset
+                </h2>
 
-            <p style={styles.cardText}>
-              Export a single assessment for the selected participant.
-            </p>
+                <p style={styles.cardText}>
+                  Export an analysis-ready dataset containing sessions,
+                  assessments, scoring outputs, and trial-level responses.
+                </p>
 
-            <div style={styles.buttonGrid}>
-              {uniqueAssessments.map((assessment) => (
                 <ExportButton
-                  key={assessment.key}
-                  label={assessment.label}
+                  label="Export Full Participant CSV"
                   onExport={() =>
                     researcherApi.downloadStudyExport(
                       selectedStudyId,
                       {
                         participantId: selectedParticipantId,
-                        taskType: assessment.key,
                       },
-                      `participant-${selectedParticipantId}-${assessment.key}.csv`
+                      `participant-${selectedParticipantId}.csv`
                     )
                   }
                 />
-              ))}
-            </div>
-          </section>
+              </section>
+
+              <section style={styles.card}>
+                <h2 style={styles.sectionTitle}>Session Datasets</h2>
+
+                <p style={styles.cardText}>
+                  Export a single session for the selected participant.
+                </p>
+
+                <div style={styles.buttonGrid}>
+                  {sessions.map((session, index) => {
+                    const order = session.order || index + 1;
+
+                    return (
+                      <ExportButton
+                        key={order}
+                        label={`Session ${order}`}
+                        onExport={() =>
+                          researcherApi.downloadStudyExport(
+                            selectedStudyId,
+                            {
+                              participantId: selectedParticipantId,
+                              sessionOrder: order,
+                            },
+                            `participant-${selectedParticipantId}-session-${order}.csv`
+                          )
+                        }
+                      />
+                    );
+                  })}
+                </div>
+              </section>
+
+              <section style={styles.card}>
+                <h2 style={styles.sectionTitle}>Assessment Exports</h2>
+
+                <p style={styles.cardText}>
+                  Export a single assessment for the selected participant.
+                </p>
+
+                <div style={styles.buttonGrid}>
+                  {uniqueAssessments.map((assessment) => (
+                    <ExportButton
+                      key={assessment.key}
+                      label={assessment.label}
+                      onExport={() =>
+                        researcherApi.downloadStudyExport(
+                          selectedStudyId,
+                          {
+                            participantId: selectedParticipantId,
+                            taskType: assessment.key,
+                          },
+                          `participant-${selectedParticipantId}-${assessment.key}.csv`
+                        )
+                      }
+                    />
+                  ))}
+                </div>
+              </section>
+            </>
+          )}
         </>
       )}
     </ResearcherLayout>
@@ -473,5 +594,23 @@ const styles = {
     border: "1px solid rgba(248,113,113,0.28)",
     color: "#fecaca",
     fontSize: 14,
+  },
+
+  skeletonLine: {
+    borderRadius: 999,
+    background:
+      "linear-gradient(90deg, rgba(255,255,255,0.06), rgba(255,255,255,0.12), rgba(255,255,255,0.06))",
+  },
+
+  skeletonBlock: {
+    borderRadius: 12,
+    background:
+      "linear-gradient(90deg, rgba(255,255,255,0.05), rgba(255,255,255,0.1), rgba(255,255,255,0.05))",
+    border: "1px solid rgba(255,255,255,0.06)",
+  },
+
+  skeletonPill: {
+    borderRadius: 999,
+    background: "rgba(255,255,255,0.08)",
   },
 };
