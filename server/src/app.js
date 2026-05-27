@@ -23,6 +23,7 @@ const allowedOrigins = [
   "https://admin.neurovenus.com",
   "https://participant.neurovenus.com",
   "https://app.neurovenus.com",
+  "https://api.neurovenus.com",
 ].filter(Boolean);
 
 app.use(
