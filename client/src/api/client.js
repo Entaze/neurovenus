@@ -1,5 +1,7 @@
 import axios from "axios";
 
+console.log("API BASE URL:", import.meta.env.VITE_API_BASE_URL);
+
 const api = axios.create({
   baseURL:
     import.meta.env.VITE_API_BASE_URL || "http://localhost:4000/api",
@@ -19,18 +21,18 @@ api.interceptors.response.use(
   (response) => response,
   (error) => {
     const status = error?.response?.status;
+    const requestUrl = error?.config?.url || "";
+    const currentPath = window.location.pathname;
 
-    if (status === 401) {
+    const isLoginPage = currentPath.includes("/researcher/login");
+    const isAuthRequest = requestUrl.includes("/auth/login");
+
+    if (status === 401 && !isLoginPage && !isAuthRequest) {
       localStorage.removeItem("researcherToken");
       localStorage.removeItem("researcherUser");
       localStorage.removeItem("selectedStudyId");
 
-      const currentPath = window.location.pathname;
-
-      if (!currentPath.includes("/researcher/login")) {
-        window.location.href =
-          "/researcher/login?reason=session-expired";
-      }
+      window.location.href = "/researcher/login?reason=session-expired";
     }
 
     return Promise.reject(error);
