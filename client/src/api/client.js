@@ -15,4 +15,26 @@ api.interceptors.request.use((config) => {
   return config;
 });
 
+api.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    const status = error?.response?.status;
+
+    if (status === 401) {
+      localStorage.removeItem("researcherToken");
+      localStorage.removeItem("researcherUser");
+      localStorage.removeItem("selectedStudyId");
+
+      const currentPath = window.location.pathname;
+
+      if (!currentPath.includes("/researcher/login")) {
+        window.location.href =
+          "/researcher/login?reason=session-expired";
+      }
+    }
+
+    return Promise.reject(error);
+  }
+);
+
 export default api;
