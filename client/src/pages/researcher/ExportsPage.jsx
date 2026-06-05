@@ -147,11 +147,13 @@ const isSessionCompleted = (participant, order) => {
   return getCompletedSessionOrders(participant).has(order);
 };
 
-const getCompletedAssessmentKeys = (participant, sessions) => {
+const getCompletedAssessmentKeys = (participant, sessions = []) => {
+  const safeSessions = Array.isArray(sessions) ? sessions : [];
+
   const completedSessionOrders = getCompletedSessionOrders(participant);
   const completedAssessmentKeys = new Set();
 
-  sessions.forEach((session, index) => {
+  safeSessions.forEach((session, index) => {
     const order = session.order || index + 1;
 
     if (!completedSessionOrders.has(order)) return;
@@ -190,7 +192,8 @@ export default function ExportsPage() {
   }, [studies, selectedStudyId]);
 
   const sessions = useMemo(() => {
-    return getStudySessions(selectedStudy);
+    const value = getStudySessions(selectedStudy);
+    return Array.isArray(value) ? value : [];
   }, [selectedStudy]);
 
   const uniqueAssessments = useMemo(() => {
@@ -511,6 +514,7 @@ export default function ExportsPage() {
                   {uniqueAssessments.map((assessment) => {
                     const completed = isAssessmentCompleted(
                       selectedParticipant,
+                      sessions,
                       assessment.key
                     );
 
