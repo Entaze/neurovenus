@@ -147,33 +147,6 @@ const isSessionCompleted = (participant, order) => {
   return getCompletedSessionOrders(participant).has(order);
 };
 
-const getCompletedAssessmentKeys = (participant, sessions = []) => {
-  const safeSessions = Array.isArray(sessions) ? sessions : [];
-
-  const completedSessionOrders = getCompletedSessionOrders(participant);
-  const completedAssessmentKeys = new Set();
-
-  safeSessions.forEach((session, index) => {
-    const order = session.order || index + 1;
-
-    if (!completedSessionOrders.has(order)) return;
-
-    getSessionAssessments(session).forEach((assessment) => {
-      const key = getAssessmentKey(assessment);
-
-      if (key) {
-        completedAssessmentKeys.add(key);
-      }
-    });
-  });
-
-  return completedAssessmentKeys;
-};
-
-const isAssessmentCompleted = (participant, sessions, assessmentKey) => {
-  return getCompletedAssessmentKeys(participant, sessions).has(assessmentKey);
-};
-
 export default function ExportsPage() {
   const [studies, setStudies] = useState([]);
   const [selectedStudyId, setSelectedStudyId] = useState(
@@ -213,6 +186,24 @@ export default function ExportsPage() {
     });
 
     return Array.from(map.values());
+  }, [sessions]);
+
+  const sessionAssessmentExports = useMemo(() => {
+    return sessions.flatMap((session, index) => {
+      const sessionOrder = session.order || index + 1;
+      const sessionLabel = session.label || session.name || `Session ${sessionOrder}`;
+
+      return getSessionAssessments(session).map((assessment) => {
+        const key = getAssessmentKey(assessment);
+
+        return {
+          key,
+          sessionOrder,
+          sessionLabel,
+          label: `${getAssessmentLabel(assessment)} · ${sessionLabel}`,
+        };
+      });
+    });
   }, [sessions]);
 
   const selectedParticipant = useMemo(() => {
@@ -517,30 +508,30 @@ export default function ExportsPage() {
                 </p>
 
                 <div style={styles.buttonGrid}>
-                  {uniqueAssessments.map((assessment) => {
-                    const completed = isAssessmentCompleted(
+                  {sessionAssessmentExports.map((assessment) => {
+                    const sessionCompleted = isSessionCompleted(
                       selectedParticipant,
-                      sessions,
-                      assessment.key
+                      assessment.sessionOrder
                     );
 
                     return (
                       <ExportButton
-                        key={assessment.key}
+                        key={`${assessment.key}-${assessment.sessionOrder}`}
                         label={
-                          completed
+                          sessionCompleted
                             ? assessment.label
                             : `${assessment.label} · Not completed`
                         }
-                        disabled={!completed}
+                        disabled={!sessionCompleted}
                         onExport={() =>
                           researcherApi.downloadStudyExport(
                             selectedStudyId,
                             {
                               participantId: selectedParticipantId,
                               taskType: assessment.key,
+                              sessionOrder: assessment.sessionOrder,
                             },
-                            `participant-${selectedParticipantId}-${assessment.key}.csv`
+                            `participant-${selectedParticipantId}-${assessment.key}-session-${assessment.sessionOrder}.csv`
                           )
                         }
                       />
