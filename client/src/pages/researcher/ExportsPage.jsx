@@ -133,8 +133,45 @@ function ExportsPageSkeleton() {
   );
 }
 
+const getParticipantSessionRuns = (participant) => {
+  return (
+    participant?.sessionRuns ||
+    participant?.sessions ||
+    participant?.sessionProgress ||
+    []
+  );
+};
+
+const getCompletedAssessmentKeysForSession = (participant, sessionOrder) => {
+  const sessionRuns = getParticipantSessionRuns(participant);
+
+  const sessionRun = sessionRuns.find(
+    (session) =>
+      Number(session.sessionOrder || session.order) === Number(sessionOrder)
+  );
+
+  const completedTaskTypes =
+    sessionRun?.completedTaskTypes ||
+    sessionRun?.completedAssessments ||
+    sessionRun?.assessmentTypesCompleted ||
+    [];
+
+  return new Set(completedTaskTypes);
+};
+
+const isSessionAssessmentCompleted = (
+  participant,
+  sessionOrder,
+  assessmentKey
+) => {
+  return getCompletedAssessmentKeysForSession(
+    participant,
+    sessionOrder
+  ).has(assessmentKey);
+};
+
 const getCompletedSessionOrders = (participant) => {
-  const sessionRuns = participant?.sessionRuns || participant?.sessions || [];
+  const sessionRuns = getParticipantSessionRuns(participant);
 
   return new Set(
     sessionRuns
@@ -509,20 +546,21 @@ export default function ExportsPage() {
 
                 <div style={styles.buttonGrid}>
                   {sessionAssessmentExports.map((assessment) => {
-                    const sessionCompleted = isSessionCompleted(
+                    const assessmentCompleted = isSessionAssessmentCompleted(
                       selectedParticipant,
-                      assessment.sessionOrder
+                      assessment.sessionOrder,
+                      assessment.key
                     );
 
                     return (
                       <ExportButton
                         key={`${assessment.key}-${assessment.sessionOrder}`}
                         label={
-                          sessionCompleted
+                          assessmentCompleted
                             ? assessment.label
                             : `${assessment.label} · Not completed`
                         }
-                        disabled={!sessionCompleted}
+                        disabled={!assessmentCompleted}
                         onExport={() =>
                           researcherApi.downloadStudyExport(
                             selectedStudyId,
