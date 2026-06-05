@@ -133,6 +133,42 @@ function ExportsPageSkeleton() {
   );
 }
 
+const getCompletedSessionOrders = (participant) => {
+  const sessionRuns = participant?.sessionRuns || participant?.sessions || [];
+
+  return new Set(
+    sessionRuns
+      .filter((session) => session.status === "completed")
+      .map((session) => session.sessionOrder || session.order)
+  );
+};
+
+const isSessionCompleted = (participant, order) => {
+  return getCompletedSessionOrders(participant).has(order);
+};
+
+const getCompletedAssessmentKeys = (participant) => {
+  const assessmentRuns =
+    participant?.assessmentRuns ||
+    participant?.taskRuns ||
+    [];
+
+  return new Set(
+    assessmentRuns
+      .filter((assessment) => assessment.status === "completed")
+      .map(
+        (assessment) =>
+          assessment.taskType ||
+          assessment.assessmentId ||
+          assessment.type
+      )
+  );
+};
+
+const isAssessmentCompleted = (participant, assessmentKey) => {
+  return getCompletedAssessmentKeys(participant).has(assessmentKey);
+};
+
 export default function ExportsPage() {
   const [studies, setStudies] = useState([]);
   const [selectedStudyId, setSelectedStudyId] = useState(
@@ -172,6 +208,23 @@ export default function ExportsPage() {
 
     return Array.from(map.values());
   }, [sessions]);
+
+  const selectedParticipant = useMemo(() => {
+    return participants.find(
+      (participant) => participant._id === selectedParticipantId
+    );
+  }, [participants, selectedParticipantId]);
+
+  const completedSessionCount = useMemo(() => {
+    return getCompletedSessionOrders(selectedParticipant).size;
+  }, [selectedParticipant]);
+
+  const totalSessionCount = sessions.length;
+
+  const hasCompletedSessions = completedSessionCount > 0;
+
+  const allSessionsCompleted =
+    totalSessionCount > 0 && completedSessionCount === totalSessionCount;
 
   const pageLoading = loading || participantsLoading;
 
@@ -378,24 +431,34 @@ export default function ExportsPage() {
           {selectedParticipantId && (
             <>
               <section style={styles.card}>
-                <h2 style={styles.sectionTitle}>
-                  Full Participant Dataset
-                </h2>
+                <h2 style={styles.sectionTitle}>Full Participant Dataset</h2>
 
                 <p style={styles.cardText}>
-                  Export an analysis-ready dataset containing sessions,
-                  assessments, scoring outputs, and trial-level responses.
+                  {allSessionsCompleted
+                    ? "Export the complete participant dataset containing all completed sessions, assessments, scoring outputs, and trial-level responses."
+                    : hasCompletedSessions
+                    ? `This participant has completed ${completedSessionCount} of ${totalSessionCount} sessions. Exporting now will generate a partial dataset based on completed data only.`
+                    : "This participant has not completed any sessions yet. Full participant export will become available once at least one session is completed."}
                 </p>
 
                 <ExportButton
-                  label="Export Full Participant CSV"
+                  label={
+                    allSessionsCompleted
+                      ? "Export Full Participant CSV"
+                      : hasCompletedSessions
+                      ? `Export Partial CSV (${completedSessionCount}/${totalSessionCount} sessions)`
+                      : "No Completed Data Yet"
+                  }
+                  disabled={!hasCompletedSessions}
                   onExport={() =>
                     researcherApi.downloadStudyExport(
                       selectedStudyId,
                       {
                         participantId: selectedParticipantId,
                       },
-                      `participant-${selectedParticipantId}.csv`
+                      allSessionsCompleted
+                        ? `participant-${selectedParticipantId}.csv`
+                        : `participant-${selectedParticipantId}-partial.csv`
                     )
                   }
                 />
@@ -411,11 +474,13 @@ export default function ExportsPage() {
                 <div style={styles.buttonGrid}>
                   {sessions.map((session, index) => {
                     const order = session.order || index + 1;
+                    const completed = isSessionCompleted(selectedParticipant, order);
 
                     return (
                       <ExportButton
                         key={order}
-                        label={`Session ${order}`}
+                        label={completed ? `Session ${order}` : `Session ${order} · Not completed`}
+                        disabled={!completed}
                         onExport={() =>
                           researcherApi.downloadStudyExport(
                             selectedStudyId,
@@ -440,22 +505,34 @@ export default function ExportsPage() {
                 </p>
 
                 <div style={styles.buttonGrid}>
-                  {uniqueAssessments.map((assessment) => (
-                    <ExportButton
-                      key={assessment.key}
-                      label={assessment.label}
-                      onExport={() =>
-                        researcherApi.downloadStudyExport(
-                          selectedStudyId,
-                          {
-                            participantId: selectedParticipantId,
-                            taskType: assessment.key,
-                          },
-                          `participant-${selectedParticipantId}-${assessment.key}.csv`
-                        )
-                      }
-                    />
-                  ))}
+                  {uniqueAssessments.map((assessment) => {
+                    const completed = isAssessmentCompleted(
+                      selectedParticipant,
+                      assessment.key
+                    );
+
+                    return (
+                      <ExportButton
+                        key={assessment.key}
+                        label={
+                          completed
+                            ? assessment.label
+                            : `${assessment.label} · Not completed`
+                        }
+                        disabled={!completed}
+                        onExport={() =>
+                          researcherApi.downloadStudyExport(
+                            selectedStudyId,
+                            {
+                              participantId: selectedParticipantId,
+                              taskType: assessment.key,
+                            },
+                            `participant-${selectedParticipantId}-${assessment.key}.csv`
+                          )
+                        }
+                      />
+                    );
+                  })}
                 </div>
               </section>
             </>
