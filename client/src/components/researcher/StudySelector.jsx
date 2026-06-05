@@ -19,12 +19,12 @@ export default function StudySelector({
           ...(loading ? styles.disabled : {}),
         }}
       >
-        <option value="">
+        <option value="" style={styles.option}>
           {loading ? "Loading studies..." : "Select a protocol"}
         </option>
 
         {studies.map((study) => (
-          <option key={study._id} value={study._id}>
+          <option key={study._id} value={study._id} style={styles.option}>
             {study.title}
           </option>
         ))}
@@ -61,10 +61,10 @@ const styles = {
     height: 40,
     appearance: "none",
     WebkitAppearance: "none",
-    padding: "0 48px 0 16px", // slightly more right padding
+    padding: "0 48px 0 16px",
     borderRadius: 12,
     border: "1px solid rgba(148,163,184,0.18)",
-    background: "rgba(255,255,255,0.04)",
+    background: "#111827",
     color: "#e5eefb",
     fontSize: 14,
     outline: "none",
@@ -83,5 +83,10 @@ const styles = {
     transform: "translateY(-50%)",
     pointerEvents: "none",
     color: "#94a3b8",
+  },
+
+  option: {
+    background: "#0f172a",
+    color: "#ffffff",
   },
 };

@@ -422,10 +422,16 @@ export default function ExportsPage() {
                 style={styles.select}
                 disabled={!selectedStudyId}
               >
-                <option value="">Select participant</option>
+                <option value="" style={styles.option}>
+                  Select participant
+                </option>
 
                 {participants.map((participant) => (
-                  <option key={participant._id} value={participant._id}>
+                  <option
+                    key={participant._id}
+                    value={participant._id}
+                    style={styles.option}
+                  >
                     {participant.participantCode || participant.email}
                     {participant.email ? ` · ${participant.email}` : ""}
                   </option>
@@ -648,7 +654,7 @@ const styles = {
     padding: "12px 14px",
     borderRadius: 10,
     border: "1px solid rgba(255,255,255,0.12)",
-    background: "rgba(255,255,255,0.04)",
+    background: "#111827",
     color: "#ffffff",
     fontSize: 14,
     outline: "none",
@@ -696,5 +702,9 @@ const styles = {
   skeletonPill: {
     borderRadius: 999,
     background: "rgba(255,255,255,0.08)",
+  },
+  option: {
+    background: "#0f172a",
+    color: "#ffffff",
   },
 };
