@@ -147,26 +147,29 @@ const isSessionCompleted = (participant, order) => {
   return getCompletedSessionOrders(participant).has(order);
 };
 
-const getCompletedAssessmentKeys = (participant) => {
-  const assessmentRuns =
-    participant?.assessmentRuns ||
-    participant?.taskRuns ||
-    [];
+const getCompletedAssessmentKeys = (participant, sessions) => {
+  const completedSessionOrders = getCompletedSessionOrders(participant);
+  const completedAssessmentKeys = new Set();
 
-  return new Set(
-    assessmentRuns
-      .filter((assessment) => assessment.status === "completed")
-      .map(
-        (assessment) =>
-          assessment.taskType ||
-          assessment.assessmentId ||
-          assessment.type
-      )
-  );
+  sessions.forEach((session, index) => {
+    const order = session.order || index + 1;
+
+    if (!completedSessionOrders.has(order)) return;
+
+    getSessionAssessments(session).forEach((assessment) => {
+      const key = getAssessmentKey(assessment);
+
+      if (key) {
+        completedAssessmentKeys.add(key);
+      }
+    });
+  });
+
+  return completedAssessmentKeys;
 };
 
-const isAssessmentCompleted = (participant, assessmentKey) => {
-  return getCompletedAssessmentKeys(participant).has(assessmentKey);
+const isAssessmentCompleted = (participant, sessions, assessmentKey) => {
+  return getCompletedAssessmentKeys(participant, sessions).has(assessmentKey);
 };
 
 export default function ExportsPage() {
