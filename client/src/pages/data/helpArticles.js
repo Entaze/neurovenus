@@ -99,9 +99,9 @@ export const helpArticles = [
       "How institutional workspaces support multiple researchers under one subscription.",
     content: [
       "Institutional workspaces allow approved researchers to use Neurovenus under the same institutional subscription.",
-      "Workspace owners and admins can invite researchers and manage access.",
+      "Workspace owners can provision researcher access under the institutional subscription.",
       "Each researcher has their own account and private research data by default.",
-      "This keeps billing and workspace access centralized while preserving researcher-level data privacy.",
+      "This allows institutions to provide researcher access centrally while preserving private researcher environments and isolated research data.",
     ],
   },
   {
