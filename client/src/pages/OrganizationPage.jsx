@@ -235,6 +235,16 @@ export default function OrganizationPage() {
                   type="button"
                   onClick={action.onClick}
                   style={styles.supportCard}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.transform = "translateY(-1px)";
+                    e.currentTarget.style.borderColor =
+                      "rgba(148,163,184,0.22)";
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.transform = "translateY(0px)";
+                    e.currentTarget.style.borderColor =
+                      "rgba(148,163,184,0.12)";
+                  }}
                 >
                   <Icon
                     size={20}
@@ -330,7 +340,7 @@ const styles = {
 
   subtitle: {
     margin: "14px 0 0",
-    color: "#94a3b8",
+    color: "#a7b4c7",
     fontSize: 17,
     lineHeight: 1.7,
     maxWidth: 760,
@@ -428,18 +438,17 @@ const styles = {
   },
 
   supportCard: {
-    border:
-      "1px solid rgba(148,163,184,0.12)",
+    border: "1px solid rgba(148,163,184,0.12)",
     borderRadius: 18,
-    background:
-      "rgba(255,255,255,0.03)",
+    background: "rgba(255,255,255,0.03)",
     color: "#ffffff",
-    padding: 18,
+    padding: 16,
     display: "flex",
     alignItems: "flex-start",
     gap: 14,
     textAlign: "left",
     cursor: "pointer",
+    transition: "all 0.18s ease",
   },
 
   supportTitle: {
