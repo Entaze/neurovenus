@@ -26,7 +26,7 @@ export default function OrganizationPage() {
   const organizationName =
     user?.organizationName ||
     user?.institution ||
-    "Neurovenus Research Environment";
+    "Neurovenus Workspace";
 
   const plan = formatLabel(user?.plan || "pilot");
 
