@@ -66,7 +66,7 @@ export default function OrganizationPage() {
       icon: CircleHelp,
       onClick: () =>
         window.open(
-          "/help",
+          "/researcher/help",
           "_blank",
           "noopener,noreferrer"
         ),
