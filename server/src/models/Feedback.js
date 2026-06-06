@@ -64,14 +64,40 @@ const feedbackSchema = new mongoose.Schema(
       enum: [
         "studies",
         "participants",
+        "assessments",
         "exports",
+        "authentication",
+        "notifications",
         "billing",
+        "documentation",
         "team_access",
         "performance",
         "other",
       ],
       required: true,
       index: true,
+    },
+
+    impactOnWorkflow: {
+      type: String,
+      enum: [
+        "minor_inconvenience",
+        "slows_me_down",
+        "blocks_my_study",
+        "critical_issue",
+      ],
+      default: "minor_inconvenience",
+    },
+
+    scientificImportance: {
+      type: String,
+      enum: [
+        "nice_to_have",
+        "useful",
+        "important",
+        "essential",
+      ],
+      default: "nice_to_have",
     },
 
     priority: {
