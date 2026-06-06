@@ -55,10 +55,13 @@ export const helpArticles = [
     category: "Exports",
     title: "Exporting analysis-ready data",
     summary:
-      "Download participant, session, assessment, and trial-level data for analysis.",
+      "Download completed participant, session, assessment, and trial-level data for analysis.",
     content: [
       "Go to Exports and select the protocol you want to export.",
-      "Select a participant to export their full dataset, or export specific session and assessment-level data where available.",
+      "Select a participant to view the datasets currently available for export.",
+      "Neurovenus only enables exports for completed sessions and completed session-level assessments. Incomplete sessions or assessments are shown as not completed.",
+      "If a participant has completed only part of a multi-session protocol, the full participant export is labelled as a partial export.",
+      "Assessment exports are session-aware. For example, if AVLT appears in both Session 1 and Session 2, each AVLT export is shown separately and becomes available only when that specific session-level assessment has been completed.",
       "Exports are structured for statistical analysis in tools such as SPSS, R, Python, or Excel.",
       "Depending on the assessment, exports may include participant records, session timing, assessment summaries, scoring outputs, and trial-level responses.",
     ],
@@ -99,6 +102,49 @@ export const helpArticles = [
       "Workspace owners and admins can invite researchers and manage access.",
       "Each researcher has their own account and private research data by default.",
       "This keeps billing and workspace access centralized while preserving researcher-level data privacy.",
+    ],
+  },
+  {
+    id: "participant-progress",
+    category: "Participants",
+    title: "Tracking participant progress",
+    summary:
+      "Understand how Neurovenus tracks participant completion across sessions and assessments.",
+    content: [
+      "Participant progress is tracked at both the session and assessment level.",
+      "Researchers can monitor which sessions have been completed, which assessments are available, and which protocol stages are still pending.",
+      "Session and assessment completion affect export availability. Incomplete sessions or incomplete session-level assessments remain unavailable for export until the participant finishes the required protocol steps.",
+      "For multi-session studies, later sessions may remain locked until earlier sessions are completed or their configured delay period has passed.",
+      "This helps preserve study structure and longitudinal research consistency.",
+    ],
+  },
+  {
+    id: "session-aware-exports",
+    category: "Exports",
+    title: "Understanding session-level assessment exports",
+    summary:
+      "Learn how Neurovenus handles repeated assessments across multiple sessions.",
+    content: [
+      "Neurovenus treats assessments separately for each session in a protocol.",
+      "For example, AVLT in Session 1 and AVLT in Session 2 are treated as different session-level assessment exports.",
+      "This is important for repeated-measures and longitudinal study designs where the same assessment may appear at multiple timepoints.",
+      "Assessment exports only become available when that specific session-level assessment has been completed by the participant.",
+      "Export filenames include session information to help distinguish repeated assessments during downstream analysis.",
+    ],
+  },
+  {
+    id: "export-structure",
+    category: "Exports",
+    title: "Understanding exported datasets",
+    summary:
+      "Learn how Neurovenus structures exported participant and assessment data.",
+    content: [
+      "Neurovenus exports are structured for downstream statistical analysis workflows.",
+      "Depending on the export type, datasets may include participant identifiers, session information, timestamps, scoring summaries, response-level data, and trial-level records.",
+      "Participant exports can contain complete or partial datasets depending on the participant's progress through the protocol.",
+      "Partial exports are clearly labelled to help distinguish incomplete longitudinal datasets from fully completed participant datasets.",
+      "Session-level exports isolate data for a specific session, while assessment-level exports isolate data for a specific assessment instance within a session.",
+      "Exports are designed to support workflows in SPSS, R, Python, Excel, and related statistical analysis environments.",
     ],
   },
   {
